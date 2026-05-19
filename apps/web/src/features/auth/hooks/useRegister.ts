@@ -13,9 +13,8 @@ export const useRegister = () => {
     mutationFn: register,
 
     onSuccess: (data) => {
-      localStorage.setItem('access_token', data.access_token);
-      setAuth(data.user);
-      toast.success('Account created successfully! Please login.');
+      setAuth(data.user, data.access_token);
+      toast.success('Account created successfully!');
       navigate('/login');
     },
 

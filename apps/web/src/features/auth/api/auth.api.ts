@@ -16,5 +16,10 @@ export const register = async (data: {
   display_name: string;
 }): Promise<AuthResponse> => {
   const response = await api.post('/auth/register', data);
-  return response.data.data;  
+  return response.data.data;
+};
+
+export const refresh = async (): Promise<AuthResponse> => {
+  const response = await api.post('/auth/refresh');
+  return response.data.data;
 };

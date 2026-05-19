@@ -21,7 +21,7 @@ export function Button({
   onClick,
   type = 'button',
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none';
+  const baseStyles = 'inline-flex items-center justify-center cursor-pointer rounded-lg font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none';
 
   const variants = {
     primary: 'bg-primary-accent text-main-bg hover:opacity-90 shadow-[0_0_15px_rgba(94,234,212,0.3)]',
