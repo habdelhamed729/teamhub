@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../database/prisma';
-import { sendError } from '../lib/response';
+import { sendError } from '../utils/response';
 import { Workspace, WorkspaceRole } from '@teamhub/shared';
 
 // Extend Express Request to carry the resolved workspace context

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken, TokenPayload } from '../lib/jwt';
-import { sendError } from '../lib/response';
+import { verifyAccessToken, TokenPayload } from '../utils/jwt';
+import { sendError } from '../utils/response';
 
 // Extend Express Request to carry the authenticated user
 declare global {

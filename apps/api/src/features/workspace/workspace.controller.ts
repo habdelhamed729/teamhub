@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as WorkspaceService from './workspace.service';
-import { sendSuccess, sendError } from '../../lib/response';
+import { sendSuccess, sendError } from '../../utils/response';
 
 // POST /workspaces
 export const createWorkspace = async (req: Request, res: Response): Promise<void> => {

@@ -1,9 +1,8 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../../database/prisma';
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../lib/jwt';
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../utils/jwt';
 
 const SALT_ROUNDS = 12;
-const REFRESH_COOKIE = 'refresh_token';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 

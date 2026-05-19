@@ -11,6 +11,3 @@ export const createWorkspaceSchema = z.object({
 
 export const updateWorkspaceSchema = createWorkspaceSchema.partial();
 
-export const updateMemberRoleSchema = z.object({
-  role: z.enum(['admin', 'member']),
-});

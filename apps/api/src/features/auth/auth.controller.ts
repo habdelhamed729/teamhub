@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as AuthService from './auth.service';
-import { sendSuccess, sendError } from '../../lib/response';
+import { sendSuccess, sendError } from '../../utils/response';
 
 const COOKIE_OPTS = {
   httpOnly: true,
