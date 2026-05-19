@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { User } from '@teamhub/shared';
+import { persist } from 'zustand/middleware';
+import type { User } from '@teamhub/shared';  
 
 interface AuthState {
   user: User | null;
@@ -10,6 +11,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()(
+  persist(
     (set) => ({
       user: null,
       isAuthenticated: false,
@@ -21,6 +23,9 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({ user: null, isAuthenticated: false });
       },
-    })
-  
+    }),
+    {
+      name: 'auth-storage',
+    }
+  )
 );
