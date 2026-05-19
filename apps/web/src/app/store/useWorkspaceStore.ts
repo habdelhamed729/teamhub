@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type { Workspace } from '@teamhub/shared';
 
 interface WorkspaceState {
@@ -15,7 +14,6 @@ interface WorkspaceState {
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()(
-  persist(
     (set, get) => ({
       workspaces: [],
       activeWorkspace: null,
@@ -33,8 +31,5 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
       clearWorkspaces: () => set({ workspaces: [], activeWorkspace: null }),
     }),
-    {
-      name: 'workspace-storage',
-    }
-  )
+  
 );

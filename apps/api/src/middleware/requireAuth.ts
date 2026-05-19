@@ -16,14 +16,19 @@ export const requireAuth = (
   res: Response,
   next: NextFunction,
 ): void => {
+  // 1. Try to get token from cookies (Approach 2)
+  const cookieToken = req.cookies?.['access_token'];
+  
+  // 2. Fallback to Authorization header
   const authHeader = req.headers['authorization'];
+  const headerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const token = cookieToken || headerToken;
+
+  if (!token) {
     sendError(res, 'Unauthorized — missing token', 401);
     return;
   }
-
-  const token = authHeader.slice(7);
 
   try {
     req.user = verifyAccessToken(token);

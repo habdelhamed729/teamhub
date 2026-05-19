@@ -1,6 +1,10 @@
 import { api } from '@/shared/services/axios';
 
-import type { AuthResponse } from '@teamhub/shared';
+import type { User } from '@teamhub/shared';
+
+export interface AuthResponse {
+  user: User;
+}
 
 export const login = async (data: {
   email: string;
@@ -22,4 +26,8 @@ export const register = async (data: {
 export const refresh = async (): Promise<AuthResponse> => {
   const response = await api.post('/auth/refresh');
   return response.data.data;
+};
+
+export const logout = async (): Promise<void> => {
+  await api.post('/auth/logout');
 };

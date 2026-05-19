@@ -1,9 +1,10 @@
 import { LogOut } from 'lucide-react';
 import { useAuthStore } from '@/app/store/useAuthStore';
+import { useLogout } from '@/features/auth/hooks/useLogout';
 import { Button } from '@/shared/components/Button';
 
 export const WorkspaceHeader = () => {
-  const logout = useAuthStore((state) => state.logout);
+  const { logout } = useLogout();
   const user = useAuthStore((state) => state.user);
 
   return (

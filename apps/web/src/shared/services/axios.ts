@@ -4,17 +4,7 @@ import { refresh } from "@/features/auth/api/auth.api";
 
 export const api = axios.create({
   baseURL: "http://localhost:3000",
-  withCredentials: true,
-});
-
-api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
+  withCredentials: true, //hena bn3ml send ll cookies m3a kol request
 });
 
 api.interceptors.response.use(
@@ -25,13 +15,14 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      originalRequest.url !== "/auth/refresh"
+      originalRequest.url !== "/auth/refresh" &&
+      originalRequest.url !== "/auth/login" &&
+      originalRequest.url !== "/auth/register"
     ) {
       originalRequest._retry = true;
       try {
-        const { access_token, user } = await refresh();
-        useAuthStore.getState().setAuth(user, access_token);
-        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        const { user } = await refresh(); //bn3ml refresh lma el token texpire
+        useAuthStore.getState().setAuth(user);
         return api(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().logout();

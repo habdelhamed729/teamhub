@@ -11,7 +11,7 @@ export const useRefresh = () => {
     const performRefresh = async () => {
       try {
         const data = await refresh();
-        setAuth(data.user, data.access_token);
+        setAuth(data.user);
       } catch (error) {
         logout();
       } finally {
