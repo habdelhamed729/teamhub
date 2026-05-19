@@ -3,10 +3,10 @@
 @theme {
   /* Colors */
   --color-primary-accent: #5EEAD4;
-  --color-main-bg: #0B1020;
-  --color-surface-secondary: #121A2B;
-  --color-surface-elevated: #1A2338;
-  --color-ai-accent: #7C3AED;
+  --color-main-bg: #1A1D21;
+  --color-surface-secondary: #22262C;
+  --color-surface-elevated: #2A2F36;
+    --color-ai-accent: #7C3AED;
 
   /* Text Colors */
   --color-text-primary: #F8FAFC;

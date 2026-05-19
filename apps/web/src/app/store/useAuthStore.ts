@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User } from '@teamhub/shared';
+import type { User } from '@teamhub/shared';  
 
 interface AuthState {
   user: User | null;
@@ -8,7 +8,6 @@ interface AuthState {
   setAuth: (user: User) => void;
   updateUser: (user: User) => void;
   logout: () => void;
-
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -22,8 +21,6 @@ export const useAuthStore = create<AuthState>()(
       updateUser: (user) => set({ user }),
 
       logout: () => {
-
-        localStorage.removeItem('access_token');
         set({ user: null, isAuthenticated: false });
       },
     }),

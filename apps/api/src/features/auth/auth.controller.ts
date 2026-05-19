@@ -4,17 +4,27 @@ import { sendSuccess, sendError } from '../../utils/response';
 
 const COOKIE_OPTS = {
   httpOnly: true,
-  secure:   process.env['NODE_ENV'] === 'production',
+  secure: process.env['NODE_ENV'] === 'production',
   sameSite: 'strict' as const,
-  maxAge:   7 * 24 * 60 * 60 * 1000, // 7 days in ms
+};
+
+const ACCESS_COOKIE_OPTS = {
+  ...COOKIE_OPTS,
+  maxAge: 15 * 60 * 1000, // 15 minutes
+};
+
+const REFRESH_COOKIE_OPTS = {
+  ...COOKIE_OPTS,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
 // POST /auth/register
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { user, access_token, refresh_token } = await AuthService.register(req.body);
-    res.cookie('refresh_token', refresh_token, COOKIE_OPTS);
-    sendSuccess(res, { user, access_token }, 201);
+    res.cookie('access_token', access_token, ACCESS_COOKIE_OPTS);
+    res.cookie('refresh_token', refresh_token, REFRESH_COOKIE_OPTS);
+    sendSuccess(res, { user }, 201);
   } catch (err: any) {
     sendError(res, err.message, err.status ?? 500);
   }
@@ -24,17 +34,19 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { user, access_token, refresh_token } = await AuthService.login(req.body);
-    res.cookie('refresh_token', refresh_token, COOKIE_OPTS);
-    sendSuccess(res, { user, access_token });
+    res.cookie('access_token', access_token, ACCESS_COOKIE_OPTS);
+    res.cookie('refresh_token', refresh_token, REFRESH_COOKIE_OPTS);
+    sendSuccess(res, { user });
   } catch (err: any) {
     sendError(res, err.message, err.status ?? 500);
   }
 };
 
-// POST /auth/logout  (requireAuth)
+// POST /auth/logout (requireAuth)
 export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
     await AuthService.logout(req.user!.sub);
+    res.clearCookie('access_token');
     res.clearCookie('refresh_token');
     sendSuccess(res, { message: 'Logged out successfully' });
   } catch (err: any) {
@@ -51,8 +63,9 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
     const { user, access_token, refresh_token } = await AuthService.refresh(token);
-    res.cookie('refresh_token', refresh_token, COOKIE_OPTS);
-    sendSuccess(res, { user, access_token });
+    res.cookie('access_token', access_token, ACCESS_COOKIE_OPTS);
+    res.cookie('refresh_token', refresh_token, REFRESH_COOKIE_OPTS);
+    sendSuccess(res, { user });
   } catch (err: any) {
     sendError(res, err.message, err.status ?? 401);
   }

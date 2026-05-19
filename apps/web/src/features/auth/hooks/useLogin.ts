@@ -13,7 +13,6 @@ export const useLogin = () => {
     mutationFn: login,
 
     onSuccess: (data) => {
-      localStorage.setItem('access_token', data.access_token);
       setAuth(data.user);
       toast.success(`Welcome back, ${data.user.display_name}!`);
       navigate('/workspaces');

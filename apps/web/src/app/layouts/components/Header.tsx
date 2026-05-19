@@ -1,10 +1,13 @@
 import { useAuthStore } from '@/app/store/useAuthStore';
+import { useLogout } from '@/features/auth/hooks/useLogout';
+import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Clock, HelpCircle, User as UserIcon, LogOut } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 
 export const Header = () => {
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+  const { logout } = useLogout();
 
   return (
     <header className="h-16 bg-surface-secondary/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 shrink-0">
@@ -39,22 +42,25 @@ export const Header = () => {
           </button>
         </div>
 
-        {/* User Profile Menu */}
+        {/* User Profile Menu with Navigation */}
         <div className="flex items-center gap-3">
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-bold">{user?.display_name}</p>
-            <p className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Team Member</p>
-          </div>
-          <div className="h-9 w-9 rounded-xl bg-surface-elevated border border-white/10 flex items-center justify-center group relative cursor-pointer hover:border-primary-accent/30 transition-all overflow-hidden">
-            {user?.avatar_url ? (
-               <img src={user.avatar_url} alt={user.display_name} className="h-full w-full object-cover" />
-            ) : (
-              <UserIcon className="h-5 w-5 text-text-muted group-hover:text-primary-accent transition-colors" />
-            )}
-            
-            {/* Simple dropdown overlay simulation */}
-            <div className="absolute inset-0 bg-primary-accent/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
+          <button 
+            onClick={() => navigate('/settings/profile')}
+            className="flex items-center gap-3 text-right hover:opacity-80 transition-opacity"
+          >
+            <div className="hidden md:block">
+              <p className="text-sm font-bold">{user?.display_name}</p>
+              <p className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Team Member</p>
+            </div>
+            <div className="h-9 w-9 rounded-xl bg-surface-elevated border border-white/10 flex items-center justify-center group relative cursor-pointer hover:border-primary-accent/30 transition-all overflow-hidden shrink-0">
+              {user?.avatar_url ? (
+                 <img src={user.avatar_url} alt={user.display_name} className="h-full w-full object-cover" />
+              ) : (
+                <UserIcon className="h-5 w-5 text-text-muted group-hover:text-primary-accent transition-colors" />
+              )}
+              <div className="absolute inset-0 bg-primary-accent/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </button>
           
           <Button variant="ghost" size="sm" onClick={logout} className="p-2 h-auto text-text-muted hover:text-danger hover:bg-danger/10">
             <LogOut className="h-4 w-4" />
