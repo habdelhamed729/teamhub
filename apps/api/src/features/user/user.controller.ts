@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { sendSuccess, sendError } from '../../lib/response';
+import { sendSuccess, sendError } from '../../utils/response';
 import * as UserService from './user.service';
 
 export const updateMe = async (req: Request, res: Response) => {

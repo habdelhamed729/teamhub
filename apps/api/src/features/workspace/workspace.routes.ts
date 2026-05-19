@@ -3,7 +3,7 @@ import * as WorkspaceController from './workspace.controller';
 import { requireAuth } from '../../middleware/requireAuth';
 import { attachWorkspaceContext } from '../../middleware/attachWorkspaceContext';
 import { validate } from '../../middleware/validate';
-import { createWorkspaceSchema, updateWorkspaceSchema, updateMemberRoleSchema, joinWorkspaceSchema } from '@teamhub/shared';
+import { createWorkspaceSchema, updateWorkspaceSchema } from '@teamhub/shared';
 
 const router = Router();
 
