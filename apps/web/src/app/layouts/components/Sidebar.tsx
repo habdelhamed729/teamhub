@@ -2,17 +2,19 @@ import { useState } from 'react';
 import { useWorkspaceStore } from '@/app/store/useWorkspaceStore';
 import { useQuery } from '@tanstack/react-query';
 import { listWorkspaces } from '@/features/workspace/api/workspace.api';
-import { 
-  Hash, 
-  MessageSquare, 
-  CheckSquare, 
-  FileText, 
+import { listChannels } from '@/features/channels/api/channels.api';
+import {
+  Hash,
+  MessageSquare,
+  CheckSquare,
+  FileText,
   Settings as SettingsIcon,
   Plus,
   ChevronDown,
   Check
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import type {Channel} from '@teamhub/shared';
 
 export const Sidebar = () => {
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
@@ -20,24 +22,35 @@ export const Sidebar = () => {
   const location = useLocation();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isChannelsOpen, setIsChannelsOpen] = useState(false);
 
   const { data: workspaces } = useQuery({
     queryKey: ['workspaces'],
     queryFn: listWorkspaces,
   });
 
+  const channelsPath = activeWorkspace ? `/workspaces/${activeWorkspace.id}/channels` : '/workspaces/channels';
+
+  const { data: channels, isLoading: isChannelsLoading } = useQuery({
+    queryKey: ['channels', activeWorkspace?.id],
+    queryFn: () => listChannels(activeWorkspace?.id ?? ''),
+    enabled: isChannelsOpen && !!activeWorkspace?.id,
+  });
+
+  const basePath = activeWorkspace ? `/workspaces/${activeWorkspace.id}` : '/workspaces';
+
   const navItems = [
-    { label: 'Channels', icon: Hash, path: '/channels' },
-    { label: 'Direct Messages', icon: MessageSquare, path: '/messages' },
-    { label: 'Tasks', icon: CheckSquare, path: '/tasks' },
-    { label: 'Documents', icon: FileText, path: '/docs' },
+    { label: 'Members', icon: CheckSquare, path: `${basePath}/members` },
+    { label: 'Direct Messages', icon: MessageSquare, path: `${basePath}/messages` },
+    { label: 'Tasks', icon: CheckSquare, path: `${basePath}/tasks` },
+    { label: 'Documents', icon: FileText, path: `${basePath}/docs` },
   ];
 
   return (
     <aside className="w-64 bg-surface-secondary border-r border-white/5 flex flex-col h-full shrink-0">
       {/* Workspace Switcher Component */}
       <div className="p-4 border-b border-white/5 relative">
-        <button 
+        <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className={`w-full flex items-center justify-between p-2 rounded-xl border transition-all group ${
             isDropdownOpen ? 'bg-surface-elevated border-primary-accent/30' : 'bg-surface-elevated border-white/5 hover:border-primary-accent/30'
@@ -104,20 +117,86 @@ export const Sidebar = () => {
         <div>
           <h3 className="px-2 text-xs font-semibold text-text-muted uppercase tracking-wider mb-4">Workspace</h3>
           <div className="space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
-                  location.pathname.startsWith(item.path) 
-                    ? 'bg-primary-accent/10 text-primary-accent font-medium' 
-                    : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
-                }`}
-              >
-                <item.icon className={`h-4 w-4 ${location.pathname.startsWith(item.path) ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'}`} />
-                <span className="text-sm">{item.label}</span>
-              </Link>
-            ))}
+            <div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setIsChannelsOpen((prev) => !prev)}
+                  aria-label={isChannelsOpen ? 'Collapse channels list' : 'Expand channels list'}
+                  aria-expanded={isChannelsOpen}
+                  className={`rounded-lg p-2 transition-all ${
+                    isChannelsOpen || location.pathname.startsWith(channelsPath)
+                      ? 'text-primary-accent hover:bg-primary-accent/10'
+                      : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                  }`}
+                >
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isChannelsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <Link
+                  to={channelsPath}
+                  className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 transition-all group ${
+                    location.pathname.startsWith(channelsPath)
+                      ? 'bg-primary-accent/10 text-primary-accent font-medium'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                  }`}
+                >
+                  <Hash
+                    className={`h-4 w-4 ${
+                      location.pathname.startsWith(channelsPath) ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'
+                    }`}
+                  />
+                  <span className="text-sm">Channels</span>
+                </Link>
+              </div>
+
+              {isChannelsOpen && (
+                <div className="ml-4 mt-2 space-y-1 border-l border-white/5 pl-3">
+                  {isChannelsLoading ? (
+                    <div className="px-3 py-2 text-xs text-text-muted">Loading channels...</div>
+                  ) : channels?.length ? (
+                    channels.map((channel: Channel) => {
+                      const channelPath = `${channelsPath}/${channel.id}`;
+                      const isChannelActive = location.pathname === channelPath;
+
+                      return (
+                        <Link
+                          key={channel.id}
+                          to={channelPath}
+                          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                            isChannelActive
+                              ? 'bg-primary-accent/10 text-primary-accent'
+                              : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                          }`}
+                        >
+                          <span className="text-text-muted">#</span>
+                          <span className="min-w-0 truncate">{channel.name}</span>
+                        </Link>
+                      );
+                    })
+                  ) : (
+                    <div className="px-3 py-2 text-xs text-text-muted">No channels found</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {navItems.map((item) => {
+              const isActive = location.pathname.startsWith(item.path);
+              return (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
+                    isActive
+                      ? 'bg-primary-accent/10 text-primary-accent font-medium'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                  }`}
+                >
+                  <item.icon className={`h-4 w-4 ${isActive ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'}`} />
+                  <span className="text-sm">{item.label}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -133,7 +212,7 @@ export const Sidebar = () => {
       </nav>
 
       <div className="p-4 border-t border-white/5">
-        <Link 
+        <Link
           to="/settings"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all group"
         >

@@ -26,7 +26,8 @@ export const RegisterForm = () => {
     registerUser(data);
   };
 
-  const errorMessage = (error as any)?.response?.data?.message || null;
+  type ApiError = { response?: { data?: { message?: string } } };
+  const errorMessage = (error as unknown as ApiError)?.response?.data?.message || null;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">

@@ -9,6 +9,8 @@ declare global {
     interface Request {
       workspace?: Workspace;
       workspaceRole?: WorkspaceRole;
+      canManageMembers?: boolean;
+      canManageChannels?: boolean;
     }
   }
 }
@@ -42,6 +44,11 @@ export const attachWorkspaceContext = async (
 
   req.workspace     = membership.workspace as unknown as Workspace;
   req.workspaceRole = membership.role as WorkspaceRole;
+
+  // Permission helpers (owner/admin can manage members/channels)
+  const canManage = ['owner', 'admin'].includes(membership.role);
+  req.canManageMembers = canManage;
+  req.canManageChannels = canManage;
 
   next();
 };

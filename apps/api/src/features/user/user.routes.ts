@@ -8,5 +8,6 @@ router.use(requireAuth);
 
 router.get('/me', UserController.getMe);
 router.patch('/me', UserController.updateMe);
+router.get('/search', UserController.searchUsers);
 
 export { router as userRouter };

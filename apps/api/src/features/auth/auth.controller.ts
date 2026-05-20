@@ -25,8 +25,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     res.cookie('access_token', access_token, ACCESS_COOKIE_OPTS);
     res.cookie('refresh_token', refresh_token, REFRESH_COOKIE_OPTS);
     sendSuccess(res, { user }, 201);
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };
 
@@ -37,8 +38,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.cookie('access_token', access_token, ACCESS_COOKIE_OPTS);
     res.cookie('refresh_token', refresh_token, REFRESH_COOKIE_OPTS);
     sendSuccess(res, { user });
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };
 
@@ -49,8 +51,9 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
     sendSuccess(res, { message: 'Logged out successfully' });
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };
 
@@ -66,8 +69,9 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     res.cookie('access_token', access_token, ACCESS_COOKIE_OPTS);
     res.cookie('refresh_token', refresh_token, REFRESH_COOKIE_OPTS);
     sendSuccess(res, { user });
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 401);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Unauthorized', e.status ?? 401);
   }
 };
 
@@ -76,7 +80,8 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await AuthService.getMe(req.user!.sub);
     sendSuccess(res, { user });
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };

@@ -47,7 +47,7 @@ pnpm prisma:migrate
 | Member | Ownership Area | Main Goal | Details Page |
 | --- | --- | --- | --- |
 | Mazen Raafat | Auth + Workspace + App Shell | Build product foundation | 🔐 Mazen Raafat — Product Foundation: Auth, Workspace, App Shell |
-| Member 2 | Members + Roles + Channels | Build collaboration structure | 👥 Member 2 — Collaboration Structure: Members, Roles, Channels |
+| Hassan Muhammad | Members + Roles + Channels | Build collaboration structure | 👥 Hassan Muhammad — Collaboration Structure: Members, Roles, Channels |
 | Member 3 | Real-Time Chat + Chat Files | Build live communication | 💬 Member 3 — Real-Time Communication: Chat, Mentions, Chat Files |
 | Member 4 | Boards + Tasks + Task Alerts | Build work management | ✅ Member 4 — Work Management: Boards, Tasks, Comments, Task Alerts |
 | Member 5 | Documents + Uploads + AI + QA | Build knowledge/files/AI/integration | 🤖 Member 5 — Knowledge, Files, AI, Notifications, Integration QA |

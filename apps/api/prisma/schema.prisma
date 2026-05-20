@@ -27,81 +27,81 @@ enum Plan {
   pro
 }
 
-
+enum ChannelType {
+  public
+  private
+  dm
+}
 
 // MODELS
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  password_hash       String
-  refresh_token_hash  String?
-  display_name        String
-  avatar_url    String?
-  status        UserStatus @default(offline)
-
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  // relations
-  workspace_members WorkspaceMember[]
-  owned_workspaces  Workspace[] @relation("WorkspaceOwner")
-  created_invites   Invite[]    @relation("InviteCreator")
-}
-
-
-
-model Workspace {
-  id         String   @id @default(uuid())
-  name       String
-  slug       String   @unique
-  logo_url   String?
-  plan       Plan     @default(free)
-
-  owner_id   String
+  id                 String     @id @default(uuid())
+  email              String     @unique
+  password_hash      String
+  refresh_token_hash String?
+  display_name       String
+  avatar_url         String?
+  status             UserStatus @default(offline)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   // relations
-  owner   User @relation("WorkspaceOwner", fields: [owner_id], references: [id])
+  workspace_members WorkspaceMember[]
+  owned_workspaces  Workspace[]       @relation("WorkspaceOwner")
+  created_invites   Invite[]          @relation("InviteCreator")
+  Channel           Channel[]
+  ChannelMember     ChannelMember[]
+}
+
+model Workspace {
+  id       String  @id @default(uuid())
+  name     String
+  slug     String  @unique
+  logo_url String?
+  plan     Plan    @default(free)
+
+  owner_id String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // relations
+  owner   User              @relation("WorkspaceOwner", fields: [owner_id], references: [id])
   members WorkspaceMember[]
   invites Invite[]
+  Channel Channel[]
 
   @@index([owner_id])
 }
-
-
 
 model WorkspaceMember {
   workspace_id String
   user_id      String
   role         WorkspaceRole @default(member)
 
-  joined_at    DateTime @default(now())
+  joined_at DateTime @default(now())
 
   // relations
   workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([workspace_id, user_id])
-
   @@index([user_id])
   @@index([workspace_id])
 }
 
-
-
 model Invite {
-  id           String   @id @default(uuid())
-  code         String   @unique
-  workspace_id String
+  id            String    @id @default(uuid())
+  code          String    @unique
+  workspace_id  String
   created_by_id String
-  expires_at   DateTime?
-  max_uses     Int?
-  uses         Int      @default(0)
+  expires_at    DateTime?
+  max_uses      Int?
+  uses          Int       @default(0)
 
-  created_at   DateTime @default(now())
+  created_at DateTime @default(now())
 
   // relations
   workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
@@ -109,4 +109,35 @@ model Invite {
 
   @@index([workspace_id])
   @@index([code])
+}
+
+model Channel {
+  id              String      @id @default(uuid())
+  workspace_id    String
+  name            String
+  type            ChannelType @default(public)
+  created_by_id   String
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  last_message_at DateTime?
+
+  // relations
+  workspace Workspace       @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  creator   User            @relation(fields: [created_by_id], references: [id])
+  members   ChannelMember[]
+
+  @@index([workspace_id])
+}
+
+model ChannelMember {
+  channel_id String
+  user_id    String
+  joined_at  DateTime @default(now())
+
+  // relations
+  channel Channel @relation(fields: [channel_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([channel_id, user_id])
+  @@index([user_id])
 }

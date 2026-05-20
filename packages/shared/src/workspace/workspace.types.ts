@@ -19,6 +19,6 @@ export interface WorkspaceMember {
   user_id: string;
   role: WorkspaceRole;
   joined_at: string | Date;
-  user?: User;
+  user: User;
   workspace?: Workspace;
 }

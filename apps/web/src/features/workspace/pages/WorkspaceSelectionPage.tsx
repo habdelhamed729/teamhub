@@ -10,7 +10,7 @@ export const WorkspaceSelectionPage = () => {
   const navigate = useNavigate();
   const { data: workspaces, isLoading } = useWorkspaces();
   const selectWorkspace = useWorkspaceStore((state) => state.selectWorkspace);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSelect = (id: string) => {
@@ -43,9 +43,9 @@ export const WorkspaceSelectionPage = () => {
                 <button
                   key={w.id}
                   onClick={() => handleSelect(w.id)}
-                  className="group relative cursor-pointer p-6 rounded-2xl bg-surface-secondary border border-white/5 hover:border-primary-accent/30 transition-all text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-primary-accent/10 hover:-translate-y-1"
+                  className="group relative cursor-pointer rounded-2xl border border-primary-accent/15 bg-surface-secondary/70 p-6 text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all hover:-translate-y-1 hover:border-primary-accent/40 hover:bg-primary-accent/5 hover:shadow-primary-accent/10"
                 >
-                  <div className="h-12 w-12 rounded-xl bg-surface-elevated border border-white/10 flex items-center justify-center mb-6 group-hover:bg-primary-accent/10 transition-colors">
+                  <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-primary-accent/15 bg-primary-accent/10 transition-colors group-hover:border-primary-accent/30 group-hover:bg-primary-accent/15">
                     {w.logo_url ? (
                       <img src={w.logo_url} alt={w.name} className="h-8 w-8 object-contain" />
                     ) : (
@@ -53,11 +53,11 @@ export const WorkspaceSelectionPage = () => {
                     )}
 
                   </div>
-                  
+
                   <h3 className="text-xl font-bold mb-1 group-hover:text-primary-accent transition-colors">{w.name || 'Untitled Workspace'}</h3>
                   <p className="text-sm text-text-muted mb-4">teamhub.com/{w.slug || 'unknown'}</p>
 
-                  
+
                   <div className="flex items-center gap-2 text-xs font-medium text-text-muted">
                     <Layout className="h-3 w-3" />
                     <span>Open Workspace</span>
@@ -68,9 +68,9 @@ export const WorkspaceSelectionPage = () => {
               {/* Create New Card */}
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="p-6 rounded-2xl cursor-pointer bg-transparent border-2 border-dashed border-white/10 hover:border-primary-accent/40 hover:bg-primary-accent/5 transition-all text-center flex flex-col items-center justify-center group"
+                className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary-accent/15 bg-transparent p-6 text-center transition-all hover:-translate-y-1 hover:border-primary-accent/40 hover:bg-primary-accent/5"
               >
-                <div className="h-12 w-12 rounded-full bg-surface-elevated border border-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-primary-accent/15 bg-primary-accent/10 transition-transform group-hover:scale-110 group-hover:border-primary-accent/30">
                   <Plus className="h-6 w-6 text-text-secondary group-hover:text-primary-accent" />
                 </div>
                 <h3 className="font-bold text-text-primary group-hover:text-primary-accent transition-colors">New Workspace</h3>
@@ -84,7 +84,7 @@ export const WorkspaceSelectionPage = () => {
 
       <CreateWorkspaceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-      <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-accent/20 to-transparent pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-primary-accent/20 to-transparent pointer-events-none" />
     </div>
   );
 };
