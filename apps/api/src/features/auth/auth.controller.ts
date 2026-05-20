@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import * as AuthService from './auth.service';
 import { sendSuccess, sendError } from '../../utils/response';
+import { signAccessToken } from '../../utils/jwt';
 
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env['NODE_ENV'] === 'production',
-  sameSite: 'strict' as const,
+  sameSite: 'lax' as const,
 };
 
 const ACCESS_COOKIE_OPTS = {
@@ -80,6 +81,18 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await AuthService.getMe(req.user!.sub);
     sendSuccess(res, { user });
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
+  }
+};
+
+// GET /auth/socket-token  (requireAuth)
+// Returns a short-lived token for Socket.io authentication
+export const getSocketToken = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const token = signAccessToken({ sub: req.user!.sub, email: req.user!.email });
+    sendSuccess(res, { token });
   } catch (err: unknown) {
     const e = err as { message?: string; status?: number };
     sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);

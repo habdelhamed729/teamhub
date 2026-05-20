@@ -1,7 +1,5 @@
 import { Server as HTTPServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { verifyAccessToken } from '../utils/jwt';
-import cookie from 'cookie';
 
 let io: Server | null = null;
 
@@ -13,28 +11,15 @@ export const initSocket = (server: HTTPServer) => {
     },
   });
 
-  // Authentication middleware — verify JWT before allowing connection
-  io.use((socket: Socket, next) => {
-    try {
-      const cookiesHeader = socket.handshake.headers.cookie || '';
-      const parsedCookies = cookie.parse(cookiesHeader);
-      const token =
-        parsedCookies['access_token'] || socket.handshake.auth?.token;
-
-      if (!token) {
-        return next(new Error('Authentication error: Missing token'));
-      }
-
-      const decoded = verifyAccessToken(token);
-      socket.data.userId = decoded.sub;
-      next();
-    } catch {
-      next(new Error('Authentication error: Invalid token'));
-    }
-  });
-
   io.on('connection', (socket: Socket) => {
-    const userId = socket.data.userId;
+    const userId = socket.handshake.auth?.userId as string | undefined;
+
+    if (!userId) {
+      console.warn('Socket connected without userId, disconnecting');
+      socket.disconnect();
+      return;
+    }
+
     console.log(`Socket connected: ${userId}`);
 
     // Join a private, user-specific room for targeted notifications
