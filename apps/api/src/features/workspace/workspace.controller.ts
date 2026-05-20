@@ -7,8 +7,9 @@ export const createWorkspace = async (req: Request, res: Response): Promise<void
   try {
     const workspace = await WorkspaceService.createWorkspace(req.user!.sub, req.body);
     sendSuccess(res, { workspace }, 201);
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };
 
@@ -17,8 +18,9 @@ export const listWorkspaces = async (req: Request, res: Response): Promise<void>
   try {
     const workspaces = await WorkspaceService.listWorkspaces(req.user!.sub);
     sendSuccess(res, { workspaces });
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };
 
@@ -30,8 +32,9 @@ export const getWorkspace = async (req: Request, res: Response): Promise<void> =
       req.user!.sub,
     );
     sendSuccess(res, { workspace });
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };
 
@@ -44,8 +47,9 @@ export const updateWorkspace = async (req: Request, res: Response): Promise<void
       req.body,
     );
     sendSuccess(res, { workspace });
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };
 
@@ -55,8 +59,9 @@ export const deleteWorkspace = async (req: Request, res: Response): Promise<void
   try {
     await WorkspaceService.deleteWorkspace(req.params['workspaceId']!, req.user!.sub);
     sendSuccess(res, { message: 'Workspace deleted successfully' });
-  } catch (err: any) {
-    sendError(res, err.message, err.status ?? 500);
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    sendError(res, e.message ?? 'Internal Server Error', e.status ?? 500);
   }
 };
 

@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useWorkspaceStore } from '@/app/store/useWorkspaceStore';
 import { useQuery } from '@tanstack/react-query';
 import { listWorkspaces } from '@/features/workspace/api/workspace.api';
-import { 
-  Hash, 
-  MessageSquare, 
-  CheckSquare, 
-  FileText, 
+import {
+  Hash,
+  MessageSquare,
+  CheckSquare,
+  FileText,
   Settings as SettingsIcon,
   Plus,
   ChevronDown,
@@ -26,18 +26,21 @@ export const Sidebar = () => {
     queryFn: listWorkspaces,
   });
 
+  const basePath = activeWorkspace ? `/workspaces/${activeWorkspace.id}` : '/workspaces';
+
   const navItems = [
-    { label: 'Channels', icon: Hash, path: '/channels' },
-    { label: 'Direct Messages', icon: MessageSquare, path: '/messages' },
-    { label: 'Tasks', icon: CheckSquare, path: '/tasks' },
-    { label: 'Documents', icon: FileText, path: '/docs' },
+    { label: 'Channels', icon: Hash, path: `${basePath}/channels` },
+    { label: 'Members', icon: CheckSquare, path: `${basePath}/members` },
+    { label: 'Direct Messages', icon: MessageSquare, path: `${basePath}/messages` },
+    { label: 'Tasks', icon: CheckSquare, path: `${basePath}/tasks` },
+    { label: 'Documents', icon: FileText, path: `${basePath}/docs` },
   ];
 
   return (
     <aside className="w-64 bg-surface-secondary border-r border-white/5 flex flex-col h-full shrink-0">
       {/* Workspace Switcher Component */}
       <div className="p-4 border-b border-white/5 relative">
-        <button 
+        <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className={`w-full flex items-center justify-between p-2 rounded-xl border transition-all group ${
             isDropdownOpen ? 'bg-surface-elevated border-primary-accent/30' : 'bg-surface-elevated border-white/5 hover:border-primary-accent/30'
@@ -104,20 +107,23 @@ export const Sidebar = () => {
         <div>
           <h3 className="px-2 text-xs font-semibold text-text-muted uppercase tracking-wider mb-4">Workspace</h3>
           <div className="space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
-                  location.pathname.startsWith(item.path) 
-                    ? 'bg-primary-accent/10 text-primary-accent font-medium' 
-                    : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
-                }`}
-              >
-                <item.icon className={`h-4 w-4 ${location.pathname.startsWith(item.path) ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'}`} />
-                <span className="text-sm">{item.label}</span>
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = location.pathname.startsWith(item.path);
+              return (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
+                    isActive
+                      ? 'bg-primary-accent/10 text-primary-accent font-medium'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                  }`}
+                >
+                  <item.icon className={`h-4 w-4 ${isActive ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'}`} />
+                  <span className="text-sm">{item.label}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -133,7 +139,7 @@ export const Sidebar = () => {
       </nav>
 
       <div className="p-4 border-t border-white/5">
-        <Link 
+        <Link
           to="/settings"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all group"
         >

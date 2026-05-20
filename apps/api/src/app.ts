@@ -6,9 +6,8 @@ import cookieParser from 'cookie-parser';
 dotenv.config();
 
 import { env } from './config/env';
-import { authRouter } from './features/auth/auth.routes';
-import { workspaceRouter } from './features/workspace/workspace.routes';
-import { userRouter } from './features/user/user.routes';
+import appRouter from './appRouter';
+
 
 const app = express();
 
@@ -23,9 +22,7 @@ app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-// Features
-app.use('/auth', authRouter);
-app.use('/workspaces', workspaceRouter);
-app.use('/users', userRouter);
+// Base app router, includes all feature routers
+app.use("", appRouter)
 
 export { app };

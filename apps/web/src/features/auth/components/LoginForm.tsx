@@ -25,7 +25,8 @@ export const LoginForm = () => {
     login(data);
   };
 
-  const errorMessage = (error as any)?.response?.data?.message || null;
+  type ApiError = { response?: { data?: { message?: string } } };
+  const errorMessage = (error as unknown as ApiError)?.response?.data?.message || null;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -71,7 +72,7 @@ export const LoginForm = () => {
         </div>
       )}
 
-      <Button type="submit" className="w-full py-3 h-auto text-lg h-12" isLoading={isPending}>
+      <Button type="submit" className="w-full py-3 text-lg h-12" isLoading={isPending}>
         Sign In
       </Button>
     </form>

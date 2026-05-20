@@ -7,6 +7,9 @@ import { WorkspaceSelectionPage } from '@/features/workspace/pages/WorkspaceSele
 import { SettingsLayout } from '@/app/layouts/SettingsLayout';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { WorkspacePage } from '@/features/profile/pages/WorkspacePage';
+import { MembersPage } from '@/features/members/pages/MembersPage';
+import { ChannelsPage } from '@/features/channels/pages/ChannelsPage';
+import { ChannelPage } from '@/features/channels/pages/ChannelPage';
 
 
 
@@ -27,6 +30,9 @@ const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           { path: '/dashboard', element: <div className="p-10 text-white">Welcome to the Dashboard!</div> },
+              { path: '/workspaces/:workspaceId/members', element: <MembersPage /> },
+              { path: '/workspaces/:workspaceId/channels', element: <ChannelsPage /> },
+              { path: '/workspaces/:workspaceId/channels/:channelId', element: <ChannelPage /> },
           {
             path: '/settings',
             element: <SettingsLayout />,

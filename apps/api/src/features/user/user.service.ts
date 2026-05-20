@@ -22,3 +22,22 @@ export const getUserProfile = async (userId: string) => {
     },
   });
 };
+
+export const searchUsers = async (currentUserId: string, q: string, limit = 10) => {
+  const ql = q.trim();
+  if (!ql) return [];
+
+  const users = await prisma.user.findMany({
+    where: {
+      AND: [{ id: { not: currentUserId } }],
+      OR: [
+        { display_name: { contains: ql, mode: 'insensitive' } },
+        { email: { contains: ql, mode: 'insensitive' } },
+      ],
+    },
+    select: { id: true, email: true, display_name: true, avatar_url: true, status: true },
+    take: limit,
+  });
+
+  return users;
+};
