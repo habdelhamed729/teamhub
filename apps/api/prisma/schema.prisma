@@ -33,6 +33,12 @@ enum ChannelType {
   dm
 }
 
+enum NotificationType {
+  mention
+  task_assigned
+  channel_invite
+}
+
 // MODELS
 
 model User {
@@ -53,6 +59,7 @@ model User {
   created_invites   Invite[]          @relation("InviteCreator")
   Channel           Channel[]
   ChannelMember     ChannelMember[]
+  notifications     Notification[]
 }
 
 model Workspace {
@@ -139,5 +146,21 @@ model ChannelMember {
   user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([channel_id, user_id])
+  @@index([user_id])
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  user_id    String
+  type       NotificationType
+  title      String
+  body       String
+  data       Json?
+  is_read    Boolean          @default(false)
+  created_at DateTime         @default(now())
+
+  // relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@index([user_id])
 }
