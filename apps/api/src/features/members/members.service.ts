@@ -1,4 +1,5 @@
 import {prisma} from '../../database/prisma';
+import { createNotification } from '../notifications/notifications.service';
 
 export const listMembers = async (workspaceId: string) => {
   const members = await prisma.workspaceMember.findMany({
@@ -37,6 +38,21 @@ export const addMember = async (
   const created = await prisma.workspaceMember.create({
     data: { workspace_id: workspaceId, user_id: userId, role },
   });
+
+  // Fetch workspace name and actor name for the notification message
+  const [workspace, actor] = await Promise.all([
+    prisma.workspace.findUnique({ where: { id: workspaceId }, select: { name: true } }),
+    prisma.user.findUnique({ where: { id: actorId }, select: { display_name: true } }),
+  ]);
+
+  // Send notification to the invited user
+  await createNotification(
+    userId,
+    'channel_invite',
+    'Workspace Invitation',
+    `${actor?.display_name ?? 'Someone'} added you to ${workspace?.name ?? 'a workspace'}`,
+    { workspaceId },
+  );
 
   return created;
 };

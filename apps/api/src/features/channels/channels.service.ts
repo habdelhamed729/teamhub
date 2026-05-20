@@ -1,4 +1,5 @@
 import { prisma } from '../../database/prisma';
+import { createNotification } from '../notifications/notifications.service';
 
 const channelMemberSelect = {
   user: {
@@ -193,6 +194,22 @@ export const addChannelMember = async (
       user_id: userId,
     },
   });
+
+  // Send notification only when someone else adds you (not self-join)
+  if (actorId !== userId) {
+    const actor = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { display_name: true },
+    });
+
+    await createNotification(
+      userId,
+      'channel_invite',
+      'Channel Invitation',
+      `${actor?.display_name ?? 'Someone'} added you to #${channel.name}`,
+      { channelId, workspaceId },
+    );
+  }
 
   return channel;
 };
