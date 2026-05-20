@@ -1,8 +1,9 @@
 import { useAuthStore } from '@/app/store/useAuthStore';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, Clock, HelpCircle, User as UserIcon, LogOut } from 'lucide-react';
+import { Search, Clock, HelpCircle, User as UserIcon, LogOut } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
+import { NotificationDropdown } from '@/features/notifications/components/NotificationDropdown';
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -33,10 +34,9 @@ export const Header = () => {
           <button className="hover:text-text-primary transition-colors">
             <Clock className="h-5 w-5" />
           </button>
-          <button className="hover:text-text-primary transition-colors relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-primary-accent rounded-full border-2 border-surface-secondary" />
-          </button>
+          
+          <NotificationDropdown />
+
           <button className="hover:text-text-primary transition-colors">
             <HelpCircle className="h-5 w-5" />
           </button>
