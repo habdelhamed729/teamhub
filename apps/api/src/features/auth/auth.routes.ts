@@ -11,5 +11,6 @@ router.post('/login', validate(loginSchema), AuthController.login);
 router.post('/logout', requireAuth, AuthController.logout);
 router.post('/refresh', AuthController.refresh);
 router.get('/me', requireAuth, AuthController.getMe);
+router.get('/socket-token', requireAuth, AuthController.getSocketToken);
 
 export { router as authRouter };

@@ -23,6 +23,16 @@ api.interceptors.response.use(
       try {
         const { user } = await refresh(); //bn3ml refresh lma el token texpire
         useAuthStore.getState().setAuth(user);
+        
+        // After a successful token refresh, the browser has a new cookie.
+        // We should explicitly tell the socket to reconnect if it had failed to connect due to the expired token.
+        import('@/shared/services/socket').then(({ getSocket }) => {
+          const socket = getSocket();
+          if (socket && socket.disconnected) {
+            socket.connect();
+          }
+        });
+
         return api(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().logout();
