@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ENUMS
@@ -60,6 +59,9 @@ model User {
   Channel           Channel[]
   ChannelMember     ChannelMember[]
   notifications     Notification[]
+  documents         Document[] @relation("DocumentCreator")
+  edited_documents  Document[] @relation("DocumentLastEditor")
+  attachments       Attachment[] @relation("AttachmentUploader")
 }
 
 model Workspace {
@@ -79,6 +81,7 @@ model Workspace {
   members WorkspaceMember[]
   invites Invite[]
   Channel Channel[]
+  documents Document[]
 
   @@index([owner_id])
 }
@@ -163,4 +166,62 @@ model Notification {
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
+}
+
+model Document {
+  id                 String   @id @default(uuid())
+
+  workspace_id       String
+  created_by_id      String
+  last_edited_by_id  String?
+
+  title              String   @default("Untitled")
+  content            Json?
+
+  is_archived        Boolean  @default(false)
+
+  parent_id          String?
+
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  workspace   Workspace  @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  creator     User       @relation("DocumentCreator", fields: [created_by_id], references: [id])
+  last_editor User?      @relation("DocumentLastEditor", fields: [last_edited_by_id], references: [id])
+  parent      Document?  @relation("DocumentHierarchy", fields: [parent_id], references: [id])
+  children    Document[] @relation("DocumentHierarchy")
+  attachments Attachment[]
+
+  @@index([workspace_id])
+  @@index([created_by_id])
+  @@index([last_edited_by_id])
+  @@index([parent_id])
+  @@index([is_archived])
+  @@index([workspace_id, is_archived])
+}
+
+model Attachment {
+  id            String   @id @default(uuid())
+  file_name     String
+  url           String
+  file_type     String
+  file_size     Int
+  uploaded_by   String
+
+  // Exactly one of these must be non-null (enforced by CHECK constraint)
+  message_id    String?
+  task_id       String?
+  document_id   String?
+
+  created_at    DateTime @default(now())
+
+  // Relations
+  uploader User      @relation("AttachmentUploader", fields: [uploaded_by], references: [id])
+  document Document? @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@index([uploaded_by])
+  @@index([message_id])
+  @@index([task_id])
+  @@index([document_id])
 }
