@@ -273,6 +273,7 @@ model Document {
   content            Json?
 
   is_archived        Boolean  @default(false)
+  archived_at        DateTime?
 
   parent_id          String?
 

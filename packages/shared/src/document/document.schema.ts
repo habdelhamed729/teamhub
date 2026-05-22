@@ -1,12 +1,14 @@
-import z from "zod";
+import { z } from "zod";
 
 export const createDocumentSchema = z.object({
-  title: z.string().min(3).max(255),
+  title: z.string().min(1).max(255),
+  parent_id: z.string().uuid().optional(),
 });
 
 export const updateDocumentSchema = z.object({
-  title: z.string().min(3).max(255).optional(),
-  content: z.record(z.string(), z.unknown()).nullable().optional(), // Tiptap JSON
+  title: z.string().min(1).max(255).optional(),
+  content: z.record(z.string(), z.unknown()).nullable().optional(),
+  parent_id: z.string().uuid().nullable().optional(),
 });
 
 export type CreateDocumentInput = z.infer<typeof createDocumentSchema>;
