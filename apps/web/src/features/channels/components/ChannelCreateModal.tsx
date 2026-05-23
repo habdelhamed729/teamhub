@@ -8,12 +8,13 @@ import { useUserSearch } from '@/features/members/hooks/useUserSearch';
 interface Props {
   workspaceId: string;
   onClose: () => void;
+  defaultType?: ChannelType;
 }
 
-export const ChannelCreateModal: React.FC<Props> = ({ workspaceId, onClose }) => {
+export const ChannelCreateModal: React.FC<Props> = ({ workspaceId, onClose, defaultType }) => {
   const createChannel = useCreateChannel(workspaceId);
   const [name, setName] = useState('');
-  const [type, setType] = useState<ChannelType>('public');
+  const [type, setType] = useState<ChannelType>(defaultType || 'public');
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);

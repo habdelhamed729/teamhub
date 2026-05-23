@@ -38,6 +38,13 @@ enum NotificationType {
   channel_invite
 }
 
+enum MessageType {
+  text
+  file
+  mixed
+  system
+}
+
 // MODELS
 
 model User {
@@ -56,6 +63,12 @@ model User {
   workspace_members WorkspaceMember[]
   owned_workspaces  Workspace[]       @relation("WorkspaceOwner")
   created_invites   Invite[]          @relation("InviteCreator")
+
+  messages          Message[]         @relation("MessageSender")
+
+  message_reactions  MessageReaction[]
+  message_mentions   MessageMention[]
+
   Channel           Channel[]
   ChannelMember     ChannelMember[]
   notifications     Notification[]
@@ -63,6 +76,85 @@ model User {
   edited_documents  Document[] @relation("DocumentLastEditor")
   attachments       Attachment[] @relation("AttachmentUploader")
 }
+
+
+model Message {
+  id              String   @id @default(uuid())
+  channelId       String
+  senderId        String
+
+  parentMessageId String?
+
+  content         String
+  messageType     MessageType
+
+  isEdited        Boolean  @default(false)
+
+  deletedAt       DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  parentMessage   Message? @relation("Replies", fields: [parentMessageId], references: [id])
+
+  replies         Message[] @relation("Replies")
+
+  channel         Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  sender          User @relation("MessageSender", fields: [senderId], references: [id])
+
+
+
+  reactions       MessageReaction[]
+  mentions        MessageMention[]
+  attachments     MessageAttachment[]
+
+  @@index([channelId, createdAt])
+  @@index([parentMessageId])
+  @@index([senderId])
+  @@index([deletedAt])
+}
+
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+
+  messageId String
+  userId    String
+
+  emoji     String
+
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+
+  @@index([messageId])
+  @@index([userId])
+}
+
+
+model MessageMention {
+  id                String   @id @default(uuid())
+
+  messageId         String
+  mentionedUserId   String
+
+  createdAt         DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  user    User @relation(fields: [mentionedUserId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([mentionedUserId])
+}
+
+
+
+
 
 model Workspace {
   id       String  @id @default(uuid())
@@ -130,11 +222,13 @@ model Channel {
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
   last_message_at DateTime?
+  messages Message[]
 
   // relations
   workspace Workspace       @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   creator   User            @relation(fields: [created_by_id], references: [id])
   members   ChannelMember[]
+  
 
   @@index([workspace_id])
 }
@@ -191,7 +285,7 @@ model Document {
   last_editor User?      @relation("DocumentLastEditor", fields: [last_edited_by_id], references: [id])
   parent      Document?  @relation("DocumentHierarchy", fields: [parent_id], references: [id])
   children    Document[] @relation("DocumentHierarchy")
-  attachments Attachment[]
+  attachments DocumentAttachment[]
 
   @@index([workspace_id])
   @@index([created_by_id])
@@ -201,27 +295,87 @@ model Document {
   @@index([workspace_id, is_archived])
 }
 
+//simple task model placeholder
+model Task {
+  id        String @id @default(uuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attachments TaskAttachment[]
+}
+
 model Attachment {
-  id            String   @id @default(uuid())
-  file_name     String
-  url           String
-  file_type     String
-  file_size     Int
-  uploaded_by   String
+  id          String   @id @default(uuid())
 
-  // Exactly one of these must be non-null (enforced by CHECK constraint)
-  message_id    String?
-  task_id       String?
-  document_id   String?
+  file_name   String
+  url         String
+  file_type   String
+  file_size   Int
 
-  created_at    DateTime @default(now())
+  uploaded_by String
+  created_at  DateTime @default(now())
 
-  // Relations
-  uploader User      @relation("AttachmentUploader", fields: [uploaded_by], references: [id])
-  document Document? @relation(fields: [document_id], references: [id], onDelete: Cascade)
+  message_attachments   MessageAttachment[]
+  document_attachments  DocumentAttachment[]
+  task_attachments      TaskAttachment[]
+
+  uploader User @relation("AttachmentUploader", fields: [uploaded_by], references: [id], onDelete: Cascade)
 
   @@index([uploaded_by])
-  @@index([message_id])
-  @@index([task_id])
-  @@index([document_id])
 }
+
+model MessageAttachment {
+  id            String   @id @default(uuid())
+
+  messageId     String
+  attachmentId  String
+
+  createdAt     DateTime @default(now())
+
+  message    Message    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  attachment Attachment @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, attachmentId])
+
+  @@index([messageId])
+  @@index([attachmentId])
+}
+
+model DocumentAttachment {
+  id            String   @id @default(uuid())
+
+  documentId    String
+  attachmentId  String
+
+  createdAt     DateTime @default(now())
+
+  document   Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  attachment Attachment @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, attachmentId])
+
+  @@index([documentId])
+  @@index([attachmentId])
+}
+
+model TaskAttachment {
+  id            String   @id @default(uuid())
+
+  taskId        String
+  attachmentId  String
+
+  createdAt     DateTime @default(now())
+
+  task       Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  attachment Attachment @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, attachmentId])
+
+  @@index([taskId])
+  @@index([attachmentId])
+}
+

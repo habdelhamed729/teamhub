@@ -1,5 +1,6 @@
 import { Server as HTTPServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import { MessageEvents } from '@teamhub/shared';
 
 let io: Server | null = null;
 
@@ -22,9 +23,34 @@ export const initSocket = (server: HTTPServer) => {
 
     console.log(`Socket connected: ${userId}`);
 
-    // Join a private, user-specific room for targeted notifications
+    // ── Personal room — for targeted notifications & mentions ──
     socket.join(`user:${userId}`);
 
+    // ── Channel room management ────────────────────────────────
+    socket.on(MessageEvents.JOIN_CHANNEL, (channelId: string) => {
+      socket.join(`channel:${channelId}`);
+    });
+
+    socket.on(MessageEvents.LEAVE_CHANNEL, (channelId: string) => {
+      socket.leave(`channel:${channelId}`);
+    });
+
+    // ── Typing indicator ───────────────────────────────────────
+    // Client emits: { channelId, isTyping, displayName }
+    // Server fans out to all other members in the channel room
+    socket.on(
+      MessageEvents.USER_TYPING,
+      (payload: { channelId: string; isTyping: boolean; displayName: string }) => {
+        socket.to(`channel:${payload.channelId}`).emit(MessageEvents.USER_TYPING, {
+          channelId: payload.channelId,
+          userId,
+          displayName: payload.displayName,
+          isTyping: payload.isTyping,
+        });
+      },
+    );
+
+    // ── Disconnect ─────────────────────────────────────────────
     socket.on('disconnect', () => {
       console.log(`Socket disconnected: ${userId}`);
     });
@@ -32,6 +58,7 @@ export const initSocket = (server: HTTPServer) => {
 
   return io;
 };
+
 
 // Global helper for emitting events from services/controllers
 export const getIO = (): Server => {

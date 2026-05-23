@@ -10,8 +10,7 @@ import { WorkspacePage } from '@/features/profile/pages/WorkspacePage';
 import { MembersPage } from '@/features/members/pages/MembersPage';
 import { ChannelsPage } from '@/features/channels/pages/ChannelsPage';
 import { ChannelPage } from '@/features/channels/pages/ChannelPage';
-
-
+import { DirectMessagesPage } from '@/features/messages/pages/DirectMessagesPage';
 
 
 const router = createBrowserRouter([
@@ -31,6 +30,7 @@ const router = createBrowserRouter([
         children: [
           { path: '/dashboard', element: <div className="p-10 text-white">Welcome to the Dashboard!</div> },
               { path: '/workspaces/:workspaceId/members', element: <MembersPage /> },
+              { path: '/workspaces/:workspaceId/messages', element: <DirectMessagesPage /> },
               { path: '/workspaces/:workspaceId/channels', element: <ChannelsPage /> },
               { path: '/workspaces/:workspaceId/channels/:channelId', element: <ChannelPage /> },
           {
