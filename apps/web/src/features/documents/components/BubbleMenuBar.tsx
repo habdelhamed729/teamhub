@@ -21,7 +21,6 @@ export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
   return (
     <BubbleMenu
       editor={editor}
-      tippyOptions={{ duration: 100 }}
       className="flex bg-surface-elevated shadow-premium rounded-lg border border-white/10 p-1 gap-1 overflow-hidden"
     >
       <button
