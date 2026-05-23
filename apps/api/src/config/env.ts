@@ -12,4 +12,7 @@ export const env = {
   JWT_REFRESH_EXPIRES:  process.env['JWT_REFRESH_EXPIRES'],
   CORS_ORIGIN:          process.env['CORS_ORIGIN'],
   PORT:                 Number(process.env['PORT']),
+  CLOUDINARY_CLOUD_NAME: required('CLOUDINARY_CLOUD_NAME'),
+  CLOUDINARY_API_KEY:    required('CLOUDINARY_API_KEY'),
+  CLOUDINARY_API_SECRET: required('CLOUDINARY_API_SECRET'),
 } as const;

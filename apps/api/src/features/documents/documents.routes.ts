@@ -1,8 +1,9 @@
-import { requireAuth } from "@/middleware/requireAuth";
+import { requireAuth } from "../../middleware/requireAuth";
 import { Router } from "express";
 import * as DocumentsController from "./documents.controller";
-import { attachWorkspaceContext } from "@/middleware/attachWorkspaceContext";
-import { validate } from "@/middleware/validate";
+import { upload, uploadImage } from "./upload.controller";
+import { attachWorkspaceContext } from "../../middleware/attachWorkspaceContext";
+import { validate } from "../../middleware/validate";
 import { createDocumentSchema, updateDocumentSchema } from "@teamhub/shared";
 
 const router = Router();
@@ -26,6 +27,7 @@ router
     attachWorkspaceContext,
     DocumentsController.listArchivedDocuments,
   )
+  .post("/documents/upload-image", upload.single("image"), uploadImage)
   .get("/documents/:documentId", DocumentsController.getDocument)
   .patch(
     "/documents/:documentId",

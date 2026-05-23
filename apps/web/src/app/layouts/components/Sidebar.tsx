@@ -3,6 +3,9 @@ import { useWorkspaceStore } from '@/app/store/useWorkspaceStore';
 import { useQuery } from '@tanstack/react-query';
 import { listWorkspaces } from '@/features/workspace/api/workspace.api';
 import { listChannels } from '@/features/channels/api/channels.api';
+import { useDocuments } from '@/features/documents/hooks/useDocuments';
+import { DocumentsSidebar } from '@/features/documents/components/DocumentsSidebar';
+import { CreateDocumentDialog } from '@/features/documents/components/CreateDocumentDialog';
 import {
   Hash,
   MessageSquare,
@@ -23,6 +26,9 @@ export const Sidebar = () => {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isChannelsOpen, setIsChannelsOpen] = useState(false);
+  const [isDocumentsOpen, setIsDocumentsOpen] = useState(false);
+  const [isCreateDocOpen, setIsCreateDocOpen] = useState(false);
+  const [createDocParentId, setCreateDocParentId] = useState<string | undefined>();
 
   const { data: workspaces } = useQuery({
     queryKey: ['workspaces'],
@@ -37,13 +43,14 @@ export const Sidebar = () => {
     enabled: isChannelsOpen && !!activeWorkspace?.id,
   });
 
+  const { data: documents } = useDocuments(activeWorkspace?.id ?? '');
+
   const basePath = activeWorkspace ? `/workspaces/${activeWorkspace.id}` : '/workspaces';
 
   const navItems = [
     { label: 'Members', icon: CheckSquare, path: `${basePath}/members` },
     { label: 'Direct Messages', icon: MessageSquare, path: `${basePath}/messages` },
     { label: 'Tasks', icon: CheckSquare, path: `${basePath}/tasks` },
-    { label: 'Documents', icon: FileText, path: `${basePath}/docs` },
   ];
 
   return (
@@ -180,6 +187,50 @@ export const Sidebar = () => {
               )}
             </div>
 
+            <div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setIsDocumentsOpen((prev) => !prev)}
+                  className={`rounded-lg p-2 transition-all ${
+                    isDocumentsOpen || location.pathname.startsWith(`${basePath}/docs`) || location.pathname.startsWith(`${basePath}/documents`)
+                      ? 'text-primary-accent hover:bg-primary-accent/10'
+                      : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                  }`}
+                >
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isDocumentsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <Link
+                  to={`${basePath}/documents`}
+                  className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 transition-all group ${
+                    location.pathname === `${basePath}/documents`
+                      ? 'bg-primary-accent/10 text-primary-accent font-medium'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                  }`}
+                >
+                  <FileText
+                    className={`h-4 w-4 ${
+                      location.pathname === `${basePath}/documents` ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'
+                    }`}
+                  />
+                  <span className="text-sm">Documents</span>
+                </Link>
+              </div>
+
+              {isDocumentsOpen && (
+                <div className="ml-4 mt-2">
+                  <DocumentsSidebar 
+                    workspaceId={activeWorkspace?.id ?? ''} 
+                    documents={documents || []} 
+                    onCreateNew={(parentId) => {
+                      setCreateDocParentId(parentId);
+                      setIsCreateDocOpen(true);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
             {navItems.map((item) => {
               const isActive = location.pathname.startsWith(item.path);
               return (
@@ -220,8 +271,15 @@ export const Sidebar = () => {
           <span className="text-sm font-medium">Settings</span>
         </Link>
       </div>
+      
+      {activeWorkspace && (
+        <CreateDocumentDialog
+          workspaceId={activeWorkspace.id}
+          isOpen={isCreateDocOpen}
+          onClose={() => setIsCreateDocOpen(false)}
+          parentId={createDocParentId}
+        />
+      )}
     </aside>
-
-
   );
 };
