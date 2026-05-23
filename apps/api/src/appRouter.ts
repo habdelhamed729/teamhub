@@ -5,6 +5,7 @@ import { userRouter } from './features/user/user.routes';
 import { membersRouter } from './features/members/members.routes';
 import { channelsRouter } from './features/channels/channels.routes';
 import { notificationsRouter } from './features/notifications/notifications.routes';
+import { messagesRouter } from './features/messages/messages.routes';
 
 const appRouter = Router();
 
@@ -12,7 +13,10 @@ appRouter.use('/auth', authRouter);
 appRouter.use('/workspaces', workspaceRouter);
 appRouter.use('/users', userRouter);
 appRouter.use('/workspaces', membersRouter);
+// messagesRouter must be registered before channelsRouter — both match /channels/:id/messages
+appRouter.use('/channels', messagesRouter);
 appRouter.use('/channels', channelsRouter);
+appRouter.use('/messages', messagesRouter); // PATCH/DELETE /messages/:messageId, reactions, replies
 appRouter.use('/notifications', notificationsRouter);
 
 export default appRouter

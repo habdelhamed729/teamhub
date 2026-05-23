@@ -153,8 +153,8 @@ export const Sidebar = () => {
                 <div className="ml-4 mt-2 space-y-1 border-l border-white/5 pl-3">
                   {isChannelsLoading ? (
                     <div className="px-3 py-2 text-xs text-text-muted">Loading channels...</div>
-                  ) : channels?.length ? (
-                    channels.map((channel: Channel) => {
+                  ) : channels?.filter((c: Channel) => c.type !== 'dm').length ? (
+                    channels.filter((c: Channel) => c.type !== 'dm').map((channel: Channel) => {
                       const channelPath = `${channelsPath}/${channel.id}`;
                       const isChannelActive = location.pathname === channelPath;
 
