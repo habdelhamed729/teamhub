@@ -56,12 +56,14 @@ export const DocumentEditorPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastLoadedIdRef = useRef<string | null>(null);
 
-  // Initialize state from fetched data
+  // Initialize state from fetched data (only when doc ID changes)
   useEffect(() => {
-    if (document) {
+    if (document && lastLoadedIdRef.current !== document.id) {
       setTitle(document.title || "");
       setContent((document.content as JSONContent) || null);
+      lastLoadedIdRef.current = document.id;
     }
   }, [document]);
 

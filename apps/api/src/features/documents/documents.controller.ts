@@ -6,8 +6,11 @@ export const listDocuments = async (req: Request, res: Response) => {
   try {
     const workspaceId = req.params["workspaceId"]!;
     const userId = req.user!.sub;
-    const documents = await DocumentsService.listDocuments(workspaceId, userId);
-    sendSuccess(res, { documents });
+    const page = req.query['page'] ? parseInt(req.query['page'] as string) : undefined;
+    const limit = req.query['limit'] ? parseInt(req.query['limit'] as string) : undefined;
+
+    const result = await DocumentsService.listDocuments(workspaceId, userId, page, limit);
+    sendSuccess(res, result);
   } catch (err: unknown) {
     const e = err as { message?: string; status?: number };
     sendError(res, e.message ?? "Internal Server Error", e.status ?? 500);
@@ -18,8 +21,11 @@ export const listArchivedDocuments = async (req: Request, res: Response) => {
   try {
     const workspaceId = req.params["workspaceId"]!;
     const userId = req.user!.sub;
-    const documents = await DocumentsService.listArchivedDocuments(workspaceId, userId);
-    sendSuccess(res, { documents });
+    const page = req.query['page'] ? parseInt(req.query['page'] as string) : undefined;
+    const limit = req.query['limit'] ? parseInt(req.query['limit'] as string) : undefined;
+
+    const result = await DocumentsService.listArchivedDocuments(workspaceId, userId, page, limit);
+    sendSuccess(res, result);
   } catch (err: unknown) {
     const e = err as { message?: string; status?: number };
     sendError(res, e.message ?? "Internal Server Error", e.status ?? 500);

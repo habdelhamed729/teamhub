@@ -10,12 +10,13 @@ export const useNotifications = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
 
-  // Fetch notifications (also polls every 30s as a fallback)
+  // Fetch notifications (relies on WebSockets for updates, no aggressive polling)
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['notifications'],
     queryFn: getNotifications,
     enabled: isAuthenticated,
-    refetchInterval: 30000,
+    staleTime: Infinity, // Rely entirely on real-time WS events to invalidate
+    refetchOnWindowFocus: false, // Stop fetching on window refocus/page click
   });
 
   // Mutation to mark a single notification as read

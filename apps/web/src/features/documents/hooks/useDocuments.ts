@@ -2,17 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as DocumentsAPI from "../api/documents.api";
 import type { CreateDocumentInput } from "@teamhub/shared";
 
-export const useDocuments = (workspaceId: string) => {
+export const useDocuments = (workspaceId: string, page?: number, limit?: number) => {
   return useQuery({
-    queryKey: ["documents", workspaceId],
-    queryFn: () => DocumentsAPI.listDocuments(workspaceId),
+    queryKey: ["documents", workspaceId, page, limit],
+    queryFn: () => DocumentsAPI.listDocuments(workspaceId, page, limit),
   });
 };
 
-export const useArchivedDocuments = (workspaceId: string) => {
+export const useArchivedDocuments = (workspaceId: string, page?: number, limit?: number) => {
   return useQuery({
-    queryKey: ["archived-documents", workspaceId],
-    queryFn: () => DocumentsAPI.listArchivedDocuments(workspaceId),
+    queryKey: ["archived-documents", workspaceId, page, limit],
+    queryFn: () => DocumentsAPI.listArchivedDocuments(workspaceId, page, limit),
   });
 };
 

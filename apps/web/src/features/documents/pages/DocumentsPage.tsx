@@ -31,17 +31,21 @@ export const DocumentsPage = () => {
   const [sortBy, setSortBy] = useState<SortKey>("updated");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [page, setPage] = useState(1);
+  const limit = 12;
 
-  const { data: documents, isLoading } = useDocuments(workspaceId!);
-  const { data: archivedDocuments } = useArchivedDocuments(workspaceId!);
+  const { data: documentsData, isLoading } = useDocuments(workspaceId!, page, limit);
+  const { data: archivedDocumentsData } = useArchivedDocuments(workspaceId!);
   const { mutate: archiveDoc } = useArchiveDocument(workspaceId!);
   const { mutate: deleteDoc } = useDeleteDocument(workspaceId!);
   const { mutate: restoreDoc } = useRestoreDocument(workspaceId!);
 
-  // Active (non-archived) docs
+  const archivedDocuments = archivedDocumentsData?.documents || [];
+
+  // Active (non-archived) docs from paginated result
   const activeDocs = useMemo(
-    () => (documents || []).filter((doc) => !doc.is_archived),
-    [documents],
+    () => documentsData?.documents || [],
+    [documentsData],
   );
 
   // Filtered + sorted docs
@@ -206,23 +210,56 @@ export const DocumentsPage = () => {
             ))}
           </div>
         ) : filteredDocs.length > 0 ? (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
-                : "flex flex-col gap-3"
-            }
-          >
-            {filteredDocs.map((doc) => (
-              <DocumentCard
-                key={doc.id}
-                document={doc}
-                workspaceId={workspaceId!}
-                onArchive={archiveDoc}
-                onDelete={deleteDoc}
-                listMode={viewMode === "list"}
-              />
-            ))}
+          <div className="space-y-6">
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+                  : "flex flex-col gap-3"
+              }
+            >
+              {filteredDocs.map((doc) => (
+                <DocumentCard
+                  key={doc.id}
+                  document={doc}
+                  workspaceId={workspaceId!}
+                  onArchive={archiveDoc}
+                  onDelete={deleteDoc}
+                  listMode={viewMode === "list"}
+                />
+              ))}
+            </div>
+
+            {documentsData?.pagination && documentsData.pagination.totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-white/5">
+                <p className="text-xs text-text-muted">
+                  Showing <span className="font-semibold text-text-primary">{(page - 1) * limit + 1}</span> to{" "}
+                  <span className="font-semibold text-text-primary">
+                    {Math.min(page * limit, documentsData.pagination.total)}
+                  </span>{" "}
+                  of <span className="font-semibold text-text-primary">{documentsData.pagination.total}</span> documents
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={page === 1}
+                    className="px-3.5 py-2 text-xs font-bold text-text-secondary hover:text-text-primary bg-surface-secondary border border-white/5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/5 transition-all"
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-secondary border border-white/5 rounded-xl text-xs font-semibold text-text-muted">
+                    Page <span className="text-text-primary font-bold">{page}</span> of {documentsData.pagination.totalPages}
+                  </div>
+                  <button
+                    onClick={() => setPage((prev) => Math.min(prev + 1, documentsData.pagination!.totalPages))}
+                    disabled={page === documentsData.pagination.totalPages}
+                    className="px-3.5 py-2 text-xs font-bold text-text-secondary hover:text-text-primary bg-surface-secondary border border-white/5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/5 transition-all"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* ── Empty State ────────────────────────────────────────────── */

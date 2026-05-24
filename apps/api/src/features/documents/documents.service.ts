@@ -70,24 +70,120 @@ const findAnyDocument = async (documentId: string, userId: string) => {
   return document;
 };
 
+const archiveDescendants = async (parentId: string, date: Date) => {
+  const children = await prisma.document.findMany({
+    where: { parent_id: parentId, is_archived: false },
+  });
+  if (children.length === 0) return;
+
+  await prisma.document.updateMany({
+    where: { parent_id: parentId, is_archived: false },
+    data: { is_archived: true, archived_at: date },
+  });
+
+  for (const child of children) {
+    await archiveDescendants(child.id, date);
+  }
+};
+
+const deleteDescendants = async (parentId: string) => {
+  const children = await prisma.document.findMany({
+    where: { parent_id: parentId },
+  });
+  for (const child of children) {
+    await deleteDescendants(child.id);
+  }
+  if (children.length > 0) {
+    await prisma.document.deleteMany({
+      where: { parent_id: parentId },
+    });
+  }
+};
+
 // ─── list ────────────────────────────────────────────────────────────────────
 
-export const listDocuments = async (workspaceId: string, userId: string) => {
-  return prisma.document.findMany({
+export const listDocuments = async (
+  workspaceId: string,
+  userId: string,
+  page?: number,
+  limit?: number,
+) => {
+  if (page !== undefined && limit !== undefined) {
+    const skip = (page - 1) * limit;
+    const [documents, total] = await Promise.all([
+      prisma.document.findMany({
+        where: { workspace_id: workspaceId, is_archived: false },
+        include: documentInclude,
+        orderBy: { updated_at: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.document.count({
+        where: { workspace_id: workspaceId, is_archived: false },
+      }),
+    ]);
+
+    return {
+      documents,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  const documents = await prisma.document.findMany({
     where: { workspace_id: workspaceId, is_archived: false },
     include: documentInclude,
     orderBy: { updated_at: 'desc' },
   });
+
+  return { documents };
 };
 
 // ─── list archived ──────────────────────────────────────────────────────────
 
-export const listArchivedDocuments = async (workspaceId: string, userId: string) => {
-  return prisma.document.findMany({
+export const listArchivedDocuments = async (
+  workspaceId: string,
+  userId: string,
+  page?: number,
+  limit?: number,
+) => {
+  if (page !== undefined && limit !== undefined) {
+    const skip = (page - 1) * limit;
+    const [documents, total] = await Promise.all([
+      prisma.document.findMany({
+        where: { workspace_id: workspaceId, is_archived: true },
+        include: documentInclude,
+        orderBy: { archived_at: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.document.count({
+        where: { workspace_id: workspaceId, is_archived: true },
+      }),
+    ]);
+
+    return {
+      documents,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  const documents = await prisma.document.findMany({
     where: { workspace_id: workspaceId, is_archived: true },
     include: documentInclude,
     orderBy: { archived_at: 'desc' },
   });
+
+  return { documents };
 };
 
 // ─── create ──────────────────────────────────────────────────────────────────
@@ -163,16 +259,14 @@ export const updateDocument = async (
 
 export const archiveDocument = async (documentId: string, userId: string) => {
   const document = await findActiveDocument(documentId, userId);
+  const now = new Date();
 
-  // Also archive all children recursively
-  await prisma.document.updateMany({
-    where: { parent_id: document.id, is_archived: false },
-    data: { is_archived: true, archived_at: new Date() },
-  });
+  // Recursively archive all descendants
+  await archiveDescendants(document.id, now);
 
   return prisma.document.update({
     where: { id: documentId },
-    data: { is_archived: true, archived_at: new Date() },
+    data: { is_archived: true, archived_at: now },
     include: documentInclude,
   });
 };
@@ -197,6 +291,9 @@ export const restoreDocument = async (documentId: string, userId: string) => {
 
 export const deleteDocument = async (documentId: string, userId: string) => {
   await findAnyDocument(documentId, userId);
+
+  // Recursively delete all descendants first to prevent foreign key violations
+  await deleteDescendants(documentId);
 
   // TODO (Issue 8): When upload service is built, fetch document's attachments
   // and delete them from Cloudinary before hard-deleting the DB record.

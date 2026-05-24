@@ -14,7 +14,9 @@ export const useUpdateDocument = () => {
   return useMutation({
     mutationFn: ({ documentId, dto }: { documentId: string; dto: any }) =>
       DocumentsAPI.updateDocument(documentId, dto),
-    onSuccess: (_data, variables) =>
-      qc.invalidateQueries({ queryKey: ["document", variables.documentId] }),
+    onSuccess: (data, variables) => {
+      qc.setQueryData(["document", variables.documentId], data);
+      qc.invalidateQueries({ queryKey: ["documents"] });
+    },
   });
 };

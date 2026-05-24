@@ -5,16 +5,25 @@ import type {
   Document,
 } from "@teamhub/shared";
 
-export const listDocuments = async (workspaceId: string) => {
-  const { data } = await api.get(`/workspaces/${workspaceId}/documents`);
-  return data.data.documents as Document[];
+export const listDocuments = async (workspaceId: string, page?: number, limit?: number) => {
+  const { data } = await api.get(`/workspaces/${workspaceId}/documents`, {
+    params: { page, limit },
+  });
+  return data.data as {
+    documents: Document[];
+    pagination?: { page: number; limit: number; total: number; totalPages: number };
+  };
 };
 
-export const listArchivedDocuments = async (workspaceId: string) => {
+export const listArchivedDocuments = async (workspaceId: string, page?: number, limit?: number) => {
   const { data } = await api.get(
     `/workspaces/${workspaceId}/documents/archived`,
+    { params: { page, limit } }
   );
-  return data.data.documents as Document[];
+  return data.data as {
+    documents: Document[];
+    pagination?: { page: number; limit: number; total: number; totalPages: number };
+  };
 };
 
 export const createDocument = async (

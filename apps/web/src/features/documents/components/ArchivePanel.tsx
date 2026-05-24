@@ -29,15 +29,26 @@ export const ArchivePanel = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeletingBatch, setIsDeletingBatch] = useState(false);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 6;
 
   // Filter documents based on search
   const filteredDocs = useMemo(() => {
+    setPage(1); // Reset page on search change
     return documents.filter((doc) =>
       (doc.title || "Untitled")
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
     );
   }, [documents, searchQuery]);
+
+  // Paginated sliced list
+  const paginatedDocs = useMemo(() => {
+    const start = (page - 1) * itemsPerPage;
+    return filteredDocs.slice(start, start + itemsPerPage);
+  }, [filteredDocs, page]);
+
+  const totalPages = Math.ceil(filteredDocs.length / itemsPerPage);
 
   // Toggle selection for a single document
   const toggleSelect = (id: string) => {
@@ -200,78 +211,113 @@ export const ArchivePanel = ({
               <p className="text-sm text-text-muted">No search results found</p>
             </div>
           ) : (
-            filteredDocs.map((doc) => {
-              const isSelected = selectedIds.includes(doc.id);
-              return (
-                <div
-                  key={doc.id}
-                  onClick={() => toggleSelect(doc.id)}
-                  className={`group relative p-4 bg-surface-elevated/60 hover:bg-surface-elevated border rounded-xl transition-all duration-300 flex items-center gap-4 cursor-pointer select-none ${
-                    isSelected
-                      ? "border-primary-accent bg-surface-elevated ring-1 ring-primary-accent/20"
-                      : "border-white/5 hover:border-white/10"
-                  }`}
-                >
-                  {/* Custom Checkbox */}
-                  <div className="shrink-0">
-                    {isSelected ? (
-                      <CheckSquare className="w-4 h-4 text-primary-accent" />
-                    ) : (
-                      <Square className="w-4 h-4 text-text-muted group-hover:text-text-secondary transition-colors" />
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-text-primary text-sm truncate group-hover:text-primary-accent transition-colors mb-1">
-                      {doc.title || "Untitled Document"}
-                    </h4>
-                    <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
-                      <Clock className="w-3 h-3 text-text-muted/70" />
-                      <span>
-                        Archived{" "}
-                        {doc.archived_at
-                          ? formatDistanceToNow(new Date(doc.archived_at), {
-                              addSuffix: true,
-                            })
-                          : "recently"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Individual Actions (appear on hover) */}
-                  <div
-                    className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => onRestore(doc.id)}
-                      className="p-2 bg-white/5 hover:bg-primary-accent hover:text-main-bg text-text-secondary rounded-lg transition-all"
-                      title="Restore document"
+            <div className="flex flex-col h-full justify-between pb-4">
+              <div className="space-y-3">
+                {paginatedDocs.map((doc) => {
+                  const isSelected = selectedIds.includes(doc.id);
+                  return (
+                    <div
+                      key={doc.id}
+                      onClick={() => toggleSelect(doc.id)}
+                      className={`group relative p-4 bg-surface-elevated/60 hover:bg-surface-elevated border rounded-xl transition-all duration-300 flex items-center gap-4 cursor-pointer select-none ${
+                        isSelected
+                          ? "border-primary-accent bg-surface-elevated ring-1 ring-primary-accent/20"
+                          : "border-white/5 hover:border-white/10"
+                      }`}
                     >
-                      <ArchiveRestore className="w-3.5 h-3.5" />
+                      {/* Custom Checkbox */}
+                      <div className="shrink-0">
+                        {isSelected ? (
+                          <CheckSquare className="w-4 h-4 text-primary-accent" />
+                        ) : (
+                          <Square className="w-4 h-4 text-text-muted group-hover:text-text-secondary transition-colors" />
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-text-primary text-sm truncate group-hover:text-primary-accent transition-colors mb-1">
+                          {doc.title || "Untitled Document"}
+                        </h4>
+                        <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
+                          <Clock className="w-3 h-3 text-text-muted/70" />
+                          <span>
+                            Archived{" "}
+                            {doc.archived_at
+                              ? formatDistanceToNow(new Date(doc.archived_at), {
+                                  addSuffix: true,
+                                })
+                              : "recently"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Individual Actions (appear on hover) */}
+                      <div
+                        className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() => onRestore(doc.id)}
+                          className="p-2 bg-white/5 hover:bg-primary-accent hover:text-main-bg text-text-secondary rounded-lg transition-all"
+                          title="Restore document"
+                        >
+                          <ArchiveRestore className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Are you sure you want to permanently delete "${
+                                  doc.title || "Untitled"
+                                }"? This action cannot be undone.`
+                              )
+                            ) {
+                              onDeleteForever(doc.id);
+                            }
+                          }}
+                          className="p-2 bg-white/5 hover:bg-danger hover:text-white text-text-muted rounded-lg transition-all"
+                          title="Delete forever"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
+                  <span className="text-xs text-text-muted">
+                    Page {page} of {totalPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPage((p) => Math.max(p - 1, 1));
+                      }}
+                      disabled={page === 1}
+                      className="px-3 py-1.5 text-[11px] font-bold text-text-secondary hover:text-text-primary bg-white/5 border border-white/5 hover:bg-white/10 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      Prev
                     </button>
                     <button
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `Are you sure you want to permanently delete "${
-                              doc.title || "Untitled"
-                            }"? This action cannot be undone.`
-                          )
-                        ) {
-                          onDeleteForever(doc.id);
-                        }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPage((p) => Math.min(p + 1, totalPages));
                       }}
-                      className="p-2 bg-white/5 hover:bg-danger hover:text-white text-text-muted rounded-lg transition-all"
-                      title="Delete forever"
+                      disabled={page === totalPages}
+                      className="px-3 py-1.5 text-[11px] font-bold text-text-secondary hover:text-text-primary bg-white/5 border border-white/5 hover:bg-white/10 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      Next
                     </button>
                   </div>
                 </div>
-              );
-            })
+              )}
+            </div>
           )}
         </div>
       </div>

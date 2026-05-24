@@ -221,7 +221,7 @@ export const Sidebar = () => {
                 <div className="ml-4 mt-2">
                   <DocumentsSidebar 
                     workspaceId={activeWorkspace?.id ?? ''} 
-                    documents={documents || []} 
+                    documents={documents?.documents || []} 
                     onCreateNew={(parentId) => {
                       setCreateDocParentId(parentId);
                       setIsCreateDocOpen(true);
