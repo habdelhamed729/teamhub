@@ -10,7 +10,7 @@ import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { WorkspaceSelectionPage } from "@/features/workspace/pages/WorkspaceSelectionPage";
 import { SettingsLayout } from "@/app/layouts/SettingsLayout";
 import { ProfilePage } from "@/features/profile/pages/ProfilePage";
-import { WorkspacePage } from "@/features/workspace/pages/WorkspacePage";
+import { WorkspacePage } from "@/features/profile/pages/WorkspacePage";
 import { MembersPage } from "@/features/members/pages/MembersPage";
 import { ChannelsPage } from "@/features/channels/pages/ChannelsPage";
 import { ChannelPage } from "@/features/channels/pages/ChannelPage";
