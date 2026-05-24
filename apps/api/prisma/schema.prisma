@@ -271,6 +271,8 @@ model Document {
 
   title              String   @default("Untitled")
   content            Json?
+  icon               String?
+  cover_url          String?
 
   is_archived        Boolean  @default(false)
   archived_at        DateTime?

@@ -8,7 +8,9 @@ import {
   Code,
   Quote,
   Minus,
+  Highlighter,
   Image as ImageIcon,
+  Table as TableIcon,
 } from "lucide-react";
 
 export interface SlashCommandItem {
@@ -97,6 +99,7 @@ export const getSuggestionItems = ({
         title: "To-do List",
         description: "Track tasks with a to-do list",
         icon: CheckSquare,
+        shortcut: "Ctrl+Shift+9",
         group: "Lists",
         command: ({ editor, range }) => {
           editor.chain().focus().deleteRange(range).toggleTaskList().run();
@@ -126,9 +129,35 @@ export const getSuggestionItems = ({
         title: "Divider",
         description: "Visually divide blocks",
         icon: Minus,
+        shortcut: "Ctrl+Shift+D",
         group: "Media",
         command: ({ editor, range }) => {
           editor.chain().focus().deleteRange(range).setHorizontalRule().run();
+        },
+      },
+      {
+        title: "Table",
+        description: "Insert a simple 3x3 grid table",
+        icon: TableIcon,
+        shortcut: "Ctrl+Alt+T",
+        group: "Media",
+        command: ({ editor, range }) => {
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run();
+        },
+      },
+      {
+        title: "Highlight",
+        description: "Highlight text",
+        icon: Highlighter,
+        shortcut: "Ctrl+Shift+H",
+        group: "Media",
+        command: ({ editor, range }) => {
+          editor.chain().focus().deleteRange(range).toggleHighlight().run();
         },
       },
       {

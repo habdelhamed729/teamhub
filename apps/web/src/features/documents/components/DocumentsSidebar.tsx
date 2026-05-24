@@ -41,7 +41,11 @@ export const DocumentsSidebar = ({ workspaceId, documents, onCreateNew }: Docume
             </button>
 
             <Link to={`/workspaces/${workspaceId}/docs/${doc.id}`} className="flex-1 flex items-center gap-2 min-w-0">
-              <FileText className={`w-4 h-4 shrink-0 ${isActive ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-secondary'}`} />
+              {doc.icon ? (
+                <span className="text-base leading-none shrink-0 w-4 h-4 flex items-center justify-center">{doc.icon}</span>
+              ) : (
+                <FileText className={`w-4 h-4 shrink-0 ${isActive ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-secondary'}`} />
+              )}
               <span className="truncate text-sm font-medium">{doc.title || 'Untitled'}</span>
             </Link>
 

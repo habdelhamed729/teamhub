@@ -12,4 +12,6 @@ export interface Document {
   updated_at: string | Date;
   creator?: { id: string; display_name: string; avatar_url?: string | null };
   last_editor?: { id: string; display_name: string; avatar_url?: string | null } | null;
+  icon?: string | null;
+  cover_url?: string | null;
 }

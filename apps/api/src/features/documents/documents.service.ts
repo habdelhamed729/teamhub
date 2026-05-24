@@ -248,6 +248,14 @@ export const updateDocument = async (
     data.parent_id = dto.parent_id;
   }
 
+  if (dto.icon !== undefined) {
+    data.icon = dto.icon;
+  }
+
+  if (dto.cover_url !== undefined) {
+    data.cover_url = dto.cover_url;
+  }
+
   return prisma.document.update({
     where: { id: documentId },
     data,

@@ -13,7 +13,7 @@ import {
   FileText,
   ImagePlus,
 } from "lucide-react";
-import { useDocument } from "../hooks/useDocument";
+import { useDocument, useUpdateDocument } from "../hooks/useDocument";
 import { useArchiveDocument, useDeleteDocument } from "../hooks/useDocuments";
 import { useAutoSave } from "../hooks/useAutoSave";
 import { DocumentEditor } from "../components/DocumentEditor";
@@ -43,10 +43,15 @@ export const DocumentEditorPage = () => {
   const { data: document, isLoading } = useDocument(documentId!);
   const { mutate: archiveDoc } = useArchiveDocument(workspaceId!);
   const { mutate: deleteDoc } = useDeleteDocument(workspaceId!);
+  const { mutateAsync: updateDoc } = useUpdateDocument();
 
   const [content, setContent] = useState<JSONContent | null>(null);
   const [title, setTitle] = useState("");
+  const [icon, setIcon] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [showOptions, setShowOptions] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [editorRef, setEditorRef] = useState<Editor | null>(null);
   const [wordInfo, setWordInfo] = useState({
     words: 0,
@@ -58,11 +63,55 @@ export const DocumentEditorPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastLoadedIdRef = useRef<string | null>(null);
 
+  // Curated list of premium cover gradients/solids and emojis
+  const EMOJIS = [
+    "📝", "📁", "🚀", "💡", "📅", "🎯", "🎨", "🛠️", 
+    "📊", "💻", "🔒", "🌍", "⚡", "🔔", "✉️", "🔥", 
+    "🏆", "🌟", "🌈", "🍎", "🍕", "✈️", "🏡", "🐾"
+  ];
+
+  const COVERS = [
+    { name: "Sunset", value: "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500" },
+    { name: "Aurora", value: "bg-gradient-to-r from-green-300 via-blue-500 to-purple-600" },
+    { name: "Cherry", value: "bg-gradient-to-r from-yellow-100 via-pink-300 to-red-500" },
+    { name: "Ocean", value: "bg-gradient-to-r from-blue-700 via-blue-800 to-gray-900" },
+    { name: "Galaxy", value: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" },
+    { name: "Grass", value: "bg-gradient-to-r from-yellow-200 via-green-200 to-green-500" },
+    { name: "Onyx", value: "bg-[#1E1E2E]" },
+    { name: "Violet", value: "bg-[#2D1B4E]" }
+  ];
+
+  const handleUpdateIcon = async (newIcon: string | null) => {
+    setIcon(newIcon);
+    try {
+      await updateDoc({
+        documentId: documentId!,
+        dto: { icon: newIcon },
+      });
+    } catch (err) {
+      console.error("Failed to update icon:", err);
+    }
+  };
+
+  const handleUpdateCover = async (newCover: string | null) => {
+    setCoverUrl(newCover);
+    try {
+      await updateDoc({
+        documentId: documentId!,
+        dto: { cover_url: newCover },
+      });
+    } catch (err) {
+      console.error("Failed to update cover:", err);
+    }
+  };
+
   // Initialize state from fetched data (only when doc ID changes)
   useEffect(() => {
     if (document && lastLoadedIdRef.current !== document.id) {
       setTitle(document.title || "");
       setContent((document.content as JSONContent) || null);
+      setIcon(document.icon || null);
+      setCoverUrl(document.cover_url || null);
       lastLoadedIdRef.current = document.id;
     }
   }, [document]);
@@ -303,8 +352,101 @@ export const DocumentEditorPage = () => {
       </header>
 
       {/* ── Editor Area ──────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-8 py-16">
+      <div className="flex-1 overflow-y-auto relative">
+        {/* Cover Header */}
+        {coverUrl && (
+          <div className="relative group/cover h-48 w-full overflow-hidden shrink-0">
+            <div className={`w-full h-full ${coverUrl}`} />
+            <div className="absolute right-8 bottom-4 opacity-0 group-hover/cover:opacity-100 transition-opacity flex gap-2">
+              <button
+                onClick={() => setShowCoverPicker(!showCoverPicker)}
+                className="px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white text-xs font-bold rounded-lg border border-white/10 transition-all cursor-pointer"
+              >
+                Change cover
+              </button>
+              <button
+                onClick={() => handleUpdateCover(null)}
+                className="px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white text-xs font-bold rounded-lg border border-white/10 transition-all cursor-pointer"
+              >
+                Remove
+              </button>
+            </div>
+            
+            {showCoverPicker && (
+              <div className="absolute right-8 bottom-12 bg-surface-elevated border border-white/10 p-3 rounded-xl shadow-2xl z-50 grid grid-cols-4 gap-2 w-64">
+                {COVERS.map((c) => (
+                  <button
+                    key={c.name}
+                    title={c.name}
+                    onClick={() => {
+                      handleUpdateCover(c.value);
+                      setShowCoverPicker(false);
+                    }}
+                    className={`h-8 rounded-lg ${c.value} border border-white/10 hover:scale-105 transition-transform cursor-pointer`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="max-w-4xl mx-auto px-8 py-12 relative group/header">
+          {/* Overlapping/Inline Page Icon */}
+          {icon ? (
+            <div className={`relative z-10 ${coverUrl ? "-mt-20 mb-4" : "mb-6"}`}>
+              <button
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="text-5xl hover:scale-105 transition-transform p-2.5 bg-main-bg rounded-2xl border border-white/5 cursor-pointer shadow-xl inline-block"
+              >
+                {icon}
+              </button>
+              
+              {showEmojiPicker && (
+                <div className="absolute left-0 top-full mt-2 bg-surface-elevated border border-white/10 p-3 rounded-xl shadow-2xl z-50 grid grid-cols-6 gap-2 w-64">
+                  {EMOJIS.map((emo) => (
+                    <button
+                      key={emo}
+                      onClick={() => {
+                        handleUpdateIcon(emo);
+                        setShowEmojiPicker(false);
+                      }}
+                      className="text-2xl hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      {emo}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => {
+                      handleUpdateIcon(null);
+                      setShowEmojiPicker(false);
+                    }}
+                    className="col-span-6 text-xs text-danger hover:bg-danger/10 py-1.5 rounded-lg font-bold transition-all cursor-pointer mt-1"
+                  >
+                    Remove Icon
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Hover Action Triggers when icon/cover is missing */
+            <div className="flex gap-3 mb-6 opacity-20 group-hover/header:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+              <button
+                onClick={() => handleUpdateIcon("📝")}
+                className="text-xs text-text-muted hover:text-text-primary flex items-center gap-1 cursor-pointer bg-white/5 hover:bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/5 font-semibold transition-colors"
+              >
+                Add icon
+              </button>
+              {!coverUrl && (
+                <button
+                  onClick={() => handleUpdateCover(COVERS[0].value)}
+                  className="text-xs text-text-muted hover:text-text-primary flex items-center gap-1 cursor-pointer bg-white/5 hover:bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/5 font-semibold transition-colors"
+                >
+                  Add cover
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Title */}
           <input
             type="text"

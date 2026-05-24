@@ -69,7 +69,13 @@ export const DocumentCard = ({
         className="group flex items-center gap-4 p-4 bg-surface-elevated/30 border border-white/5 rounded-xl hover:border-primary-accent/30 hover:bg-surface-elevated/60 transition-all"
       >
         <div className="p-2 bg-white/5 rounded-lg group-hover:bg-primary-accent/10 transition-colors shrink-0">
-          <FileText className="w-4 h-4 text-text-muted group-hover:text-primary-accent transition-colors" />
+          {document.icon ? (
+            <span className="text-sm leading-none flex items-center justify-center w-4 h-4 select-none">
+              {document.icon}
+            </span>
+          ) : (
+            <FileText className="w-4 h-4 text-text-muted group-hover:text-primary-accent transition-colors" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-text-primary text-sm group-hover:text-primary-accent transition-colors truncate">
@@ -117,9 +123,15 @@ export const DocumentCard = ({
           <div
             className={`p-2 bg-white/5 rounded-lg border border-white/10 group-hover:bg-primary-accent/10 group-hover:border-primary-accent/20 transition-colors shrink-0 ${compact ? "mt-0" : "mt-0.5"}`}
           >
-            <FileText
-              className={`text-text-secondary group-hover:text-primary-accent transition-colors ${compact ? "w-4 h-4" : "w-5 h-5"}`}
-            />
+            {document.icon ? (
+              <span className={`leading-none flex items-center justify-center select-none ${compact ? "text-sm w-4 h-4" : "text-base w-5 h-5"}`}>
+                {document.icon}
+              </span>
+            ) : (
+              <FileText
+                className={`text-text-secondary group-hover:text-primary-accent transition-colors ${compact ? "w-4 h-4" : "w-5 h-5"}`}
+              />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
