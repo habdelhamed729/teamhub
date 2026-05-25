@@ -6,6 +6,7 @@ import { membersRouter } from './features/members/members.routes';
 import { channelsRouter } from './features/channels/channels.routes';
 import { notificationsRouter } from './features/notifications/notifications.routes';
 import { messagesRouter } from './features/messages/messages.routes';
+import { documentsRouter } from './features/documents/documents.routes';
 
 const appRouter = Router();
 
@@ -18,5 +19,7 @@ appRouter.use('/channels', messagesRouter);
 appRouter.use('/channels', channelsRouter);
 appRouter.use('/messages', messagesRouter); // PATCH/DELETE /messages/:messageId, reactions, replies
 appRouter.use('/notifications', notificationsRouter);
+appRouter.use("", documentsRouter);
 
-export default appRouter
+
+export default appRouter;
