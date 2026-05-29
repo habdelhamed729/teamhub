@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import type { CreateDocumentInput, UpdateDocumentInput } from '@teamhub/shared';
+import { deleteAttachmentsByTarget } from '../attachments/attachments.service';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -89,10 +90,20 @@ const archiveDescendants = async (parentId: string, date: Date) => {
 const deleteDescendants = async (parentId: string) => {
   const children = await prisma.document.findMany({
     where: { parent_id: parentId },
+    select: { id: true },
   });
+
+  // Recurse into each child first (depth-first)
   for (const child of children) {
     await deleteDescendants(child.id);
   }
+
+  // Batch-cleanup attachments for all children (parallel Cloudinary + single deleteMany)
+  await Promise.allSettled(
+    children.map(child => deleteAttachmentsByTarget("document", child.id))
+  );
+
+  // Batch-delete child documents
   if (children.length > 0) {
     await prisma.document.deleteMany({
       where: { parent_id: parentId },
@@ -303,10 +314,8 @@ export const deleteDocument = async (documentId: string, userId: string) => {
   // Recursively delete all descendants first to prevent foreign key violations
   await deleteDescendants(documentId);
 
-  // TODO (Issue 8): When upload service is built, fetch document's attachments
-  // and delete them from Cloudinary before hard-deleting the DB record.
-  // const attachments = await prisma.attachment.findMany({ where: { document_id: documentId } });
-  // await Promise.all(attachments.map(a => cloudinary.destroy(a.public_id)));
+  // Clean up attachments of this parent document
+  await deleteAttachmentsByTarget("document", documentId);
 
   return prisma.document.delete({
     where: { id: documentId },

@@ -21,7 +21,7 @@ const messageInclude = (viewerId: string) =>
     },
     attachments: {
       include: {
-        attachment: true,
+        uploader: { select: senderSelect },
       },
     },
     _count: { select: { replies: true } },
@@ -110,8 +110,8 @@ const formatMessage = (raw: any, viewerId: string) => {
     reacted: data.reacted,
   }));
 
-  // Flatten attachments
-  const attachments = (raw.attachments ?? []).map((ma: any) => ma.attachment);
+  // Flatten attachments (directly mapped in single-table schema)
+  const attachments = raw.attachments ?? [];
 
   return {
     id: raw.id,
@@ -201,11 +201,9 @@ export const createMessage = async (
 
     // 2. Link attachments
     if (hasAttachments) {
-      await tx.messageAttachment.createMany({
-        data: dto.attachmentIds!.map((attachmentId) => ({
-          messageId: created.id,
-          attachmentId,
-        })),
+      await tx.attachment.updateMany({
+        where: { id: { in: dto.attachmentIds! } },
+        data: { message_id: created.id },
       });
     }
 
