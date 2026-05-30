@@ -33,12 +33,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       <div className="relative w-full max-w-md bg-surface-elevated border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 animate-zoom-in">
         {/* Close Button */}
         {!isLoading && (
-          <button
+          <Button
+            variant="ghost"
+            iconOnly
+            size="sm"
             onClick={onClose}
-            className="absolute right-4 top-4 p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+            icon={<X className="w-4 h-4" />}
+            className="absolute right-4 top-4 p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 border-transparent transition-all"
+          />
         )}
 
         <div className="flex gap-4">

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, FilePlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateDocument } from '../hooks/useDocuments';
-
 import { toast } from 'sonner';
+import { Button } from '@/shared/components/Button';
 
 interface CreateDocumentDialogProps {
   workspaceId: string;
@@ -16,6 +16,17 @@ export const CreateDocumentDialog = ({ workspaceId, isOpen, onClose, parentId = 
   const [title, setTitle] = useState('');
   const { mutateAsync: createDoc, isPending } = useCreateDocument(workspaceId);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -51,7 +62,7 @@ export const CreateDocumentDialog = ({ workspaceId, isOpen, onClose, parentId = 
 
       {/* Modal */}
       <div className="relative w-full max-w-md bg-surface-secondary border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-accent to-blue-500" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary-accent to-blue-500" />
         
         <div className="flex justify-between items-center p-5 border-b border-white/5">
           <div className="flex items-center gap-3">
@@ -60,12 +71,14 @@ export const CreateDocumentDialog = ({ workspaceId, isOpen, onClose, parentId = 
             </div>
             <h2 className="text-lg font-bold text-text-primary">New Document</h2>
           </div>
-          <button 
+          <Button 
+            variant="ghost"
+            iconOnly
+            size="sm"
             onClick={onClose}
-            className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/5 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+            icon={<X className="w-5 h-5" />}
+            className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/5 rounded-lg transition-colors border border-transparent"
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="p-5">
@@ -87,20 +100,23 @@ export const CreateDocumentDialog = ({ workspaceId, isOpen, onClose, parentId = 
           </div>
 
           <div className="mt-8 flex justify-end gap-3">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-bold text-text-secondary hover:text-text-primary transition-colors"
+              size="sm"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={!title.trim() || isPending}
-              className="px-5 py-2 bg-primary-accent text-main-bg text-sm font-bold rounded-xl hover:bg-[#4CD5C0] focus:ring-2 focus:ring-primary-accent/50 focus:ring-offset-2 focus:ring-offset-surface-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_0_15px_-3px_rgba(94,234,212,0.4)]"
+              disabled={!title.trim()}
+              isLoading={isPending}
+              variant="primary"
+              size="sm"
             >
-              {isPending ? 'Creating...' : 'Create Document'}
-            </button>
+              Create Document
+            </Button>
           </div>
         </form>
       </div>

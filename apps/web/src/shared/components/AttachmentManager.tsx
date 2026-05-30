@@ -17,6 +17,7 @@ import {
 import { useAttachments } from "../hooks/useAttachments";
 import { ConfirmModal } from "./ConfirmModal";
 import type { Attachment, AttachmentTarget } from "@teamhub/shared";
+import { Button } from "./Button";
 
 interface AttachmentManagerProps {
   target: AttachmentTarget;
@@ -147,13 +148,13 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
             {attachments.length}
           </span>
         </div>
-        <button className="text-text-muted hover:text-text-primary transition-colors">
-          {isExpanded ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </button>
+        <Button
+          variant="ghost"
+          iconOnly
+          size="sm"
+          icon={isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          className="text-text-muted hover:text-text-primary border-transparent pointer-events-none"
+        />
       </div>
 
       {isExpanded && (
@@ -237,8 +238,16 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
                       className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-85 transition-opacity cursor-pointer group/link"
                       title={`Open ${file.file_name}`}
                     >
-                      <div className="p-2 bg-white/5 rounded-lg shrink-0 group-hover/link:bg-white/10 transition-colors">
-                        {getFileIcon(file.file_type)}
+                      <div className={`rounded-lg shrink-0 transition-colors overflow-hidden flex items-center justify-center ${file.file_type.startsWith("image/") ? "w-10 h-10" : "p-2 bg-white/5 group-hover/link:bg-white/10"}`}>
+                        {file.file_type.startsWith("image/") ? (
+                          <img
+                            src={file.url}
+                            alt=""
+                            className="w-10 h-10 object-cover"
+                          />
+                        ) : (
+                          getFileIcon(file.file_type)
+                        )}
                       </div>
                       <div className="min-w-0">
                         <p
@@ -269,14 +278,16 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
                         <Download className="w-4 h-4" />
                       </a>
                       {isUploader && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          iconOnly
+                          size="sm"
                           onClick={() => handleDelete(file.id)}
                           disabled={isDeleting}
-                          className="p-1.5 text-text-secondary hover:text-danger hover:bg-danger/10 rounded-lg transition-all disabled:opacity-50"
+                          className="p-1.5 text-text-secondary hover:text-danger hover:bg-danger/10 rounded-lg transition-all border border-transparent"
                           title="Delete attachment"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                          icon={<Trash2 className="w-4 h-4" />}
+                        />
                       )}
                     </div>
                   </div>

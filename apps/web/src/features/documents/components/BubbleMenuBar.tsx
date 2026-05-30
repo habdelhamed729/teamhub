@@ -1,6 +1,6 @@
 import { BubbleMenu } from "@tiptap/react/menus";
 import type { Editor } from "@tiptap/react";
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   Bold,
   Italic,
@@ -32,6 +32,7 @@ import {
 import { BubbleBtn, BubbleDropdown, DropdownItem } from "./MenuComponents";
 import { ColorDropdownPanel } from "./ColorDropdownPanel";
 import { Button } from "@/shared/components/Button";
+import { useClickOutside } from "@/shared/hooks/useClickOutside";
 
 interface BubbleMenuBarProps {
   editor: Editor;
@@ -40,6 +41,9 @@ interface BubbleMenuBarProps {
 export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
   const [activeDropdown, setActiveDropdown] = useState<'headings' | 'lists' | 'align' | 'color' | null>(null);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const isMac = typeof window !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+  const mod = isMac ? "⌘" : "Ctrl";
+  const shift = isMac ? "⇧" : "Shift";
   const [linkUrl, setLinkUrl] = useState("");
 
   const handleOpenLinkModal = () => {
@@ -66,12 +70,8 @@ export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
     setIsLinkModalOpen(false);
   };
 
-  // Global handler to close active dropdowns on click outside
-  useEffect(() => {
-    const handleClose = () => setActiveDropdown(null);
-    window.addEventListener("mousedown", handleClose);
-    return () => window.removeEventListener("mousedown", handleClose);
-  }, []);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useClickOutside(menuRef, () => setActiveDropdown(null));
 
   /* ─── Dropdown helpers ──────────────────────────────────────────────────── */
   const getActiveHeadingIcon = () => {
@@ -110,7 +110,8 @@ export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
         editor={editor}
         className="flex items-center gap-0.5 bg-surface-elevated/95 backdrop-blur-xl shadow-2xl shadow-black/40 rounded-xl border border-white/10 p-1 overflow-visible z-50 animate-in fade-in zoom-in-95 duration-200"
       >
-        {isInsideTable ? (
+        <div ref={menuRef} className="flex items-center gap-0.5 w-full h-full">
+          {isInsideTable ? (
           <div className="flex items-center gap-0.5">
             <div className="flex items-center gap-1.5 px-2 text-primary-accent text-xs font-bold shrink-0">
               <TableIcon size={14} />
@@ -324,28 +325,28 @@ export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
 
             {/* Text Formatting Group */}
             <BubbleBtn
-              title="Bold"
+              title={`Bold (${mod}+B)`}
               isActive={editor.isActive("bold")}
               onClick={() => editor.chain().focus().toggleBold().run()}
             >
               <Bold size={15} />
             </BubbleBtn>
             <BubbleBtn
-              title="Italic"
+              title={`Italic (${mod}+I)`}
               isActive={editor.isActive("italic")}
               onClick={() => editor.chain().focus().toggleItalic().run()}
             >
               <Italic size={15} />
             </BubbleBtn>
             <BubbleBtn
-              title="Underline"
+              title={`Underline (${mod}+U)`}
               isActive={editor.isActive("underline")}
               onClick={() => editor.chain().focus().toggleUnderline().run()}
             >
               <UnderlineIcon size={15} />
             </BubbleBtn>
             <BubbleBtn
-              title="Strikethrough"
+              title={`Strikethrough (${mod}+${shift}+X)`}
               isActive={editor.isActive("strike")}
               onClick={() => editor.chain().focus().toggleStrike().run()}
             >
@@ -383,7 +384,7 @@ export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
             </div>
 
             <BubbleBtn
-              title="Inline Code"
+              title={`Inline Code (${mod}+${shift}+C)`}
               isActive={editor.isActive("code")}
               onClick={() => editor.chain().focus().toggleCode().run()}
             >
@@ -411,6 +412,7 @@ export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
             </BubbleBtn>
           </>
         )}
+        </div>
       </BubbleMenu>
 
       {/* Insert Link Modal */}
@@ -421,12 +423,14 @@ export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
         >
           <div className="relative w-full max-w-md bg-surface-elevated border border-white/10 rounded-2xl shadow-2xl p-6 animate-zoom-in">
             {/* Close */}
-            <button
+            <Button
+              variant="ghost"
+              iconOnly
+              size="sm"
               onClick={() => setIsLinkModalOpen(false)}
-              className="absolute right-4 top-4 p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all cursor-pointer"
-            >
-              <X size={16} />
-            </button>
+              icon={<X size={16} />}
+              className="absolute right-4 top-4 p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 border-transparent transition-all"
+            />
 
             <h3 className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
               <LinkIcon size={18} className="text-primary-accent" />

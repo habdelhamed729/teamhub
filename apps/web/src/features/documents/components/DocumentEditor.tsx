@@ -149,6 +149,7 @@ export const DocumentEditor = ({
           "prose prose-invert max-w-none focus:outline-none min-h-[60vh] cursor-text",
       },
     },
+    shouldRerenderOnTransaction: false,
   });
 
   // Notify parent when editor is ready
