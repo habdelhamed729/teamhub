@@ -5,7 +5,6 @@ import {
   FileText,
   Archive,
   Trash2,
-  FolderInput,
   Paperclip,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
@@ -180,10 +179,6 @@ export const DocumentCard = ({
                 >
                   <Archive className="w-3.5 h-3.5" />
                   Archive
-                </button>
-                <button className="w-full flex items-center gap-3 px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors font-medium">
-                  <FolderInput className="w-3.5 h-3.5" />
-                  Move to...
                 </button>
                 <div className="h-px bg-white/5 my-1" />
                 {showDeleteConfirm ? (

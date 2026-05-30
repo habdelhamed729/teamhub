@@ -99,3 +99,5 @@ export const SlashCommandList = forwardRef<
     </div>
   );
 });
+
+SlashCommandList.displayName = "SlashCommandList";

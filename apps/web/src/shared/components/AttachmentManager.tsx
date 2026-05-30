@@ -37,16 +37,29 @@ const formatBytes = (bytes: number, decimals = 2) => {
 };
 
 const getFileIcon = (mimeType: string) => {
-  if (mimeType.startsWith("image/")) return <FileImage className="w-5 h-5 text-emerald-400" />;
-  if (mimeType.startsWith("video/")) return <FileVideo className="w-5 h-5 text-indigo-400" />;
-  if (mimeType.includes("pdf")) return <FileIcon className="w-5 h-5 text-rose-400" />;
+  if (mimeType.startsWith("image/"))
+    return <FileImage className="w-5 h-5 text-emerald-400" />;
+  if (mimeType.startsWith("video/"))
+    return <FileVideo className="w-5 h-5 text-indigo-400" />;
+  if (mimeType.includes("pdf"))
+    return <FileIcon className="w-5 h-5 text-rose-400" />;
   if (mimeType.includes("word") || mimeType.includes("document"))
     return <FileText className="w-5 h-5 text-blue-400" />;
-  if (mimeType.includes("excel") || mimeType.includes("spreadsheet") || mimeType.includes("csv"))
+  if (
+    mimeType.includes("excel") ||
+    mimeType.includes("spreadsheet") ||
+    mimeType.includes("csv")
+  )
     return <FileSpreadsheet className="w-5 h-5 text-green-400" />;
-  if (mimeType.includes("zip") || mimeType.includes("tar") || mimeType.includes("rar") || mimeType.includes("archive"))
+  if (
+    mimeType.includes("zip") ||
+    mimeType.includes("tar") ||
+    mimeType.includes("rar") ||
+    mimeType.includes("archive")
+  )
     return <FileArchive className="w-5 h-5 text-amber-400" />;
-  if (mimeType.startsWith("text/")) return <FileText className="w-5 h-5 text-slate-300" />;
+  if (mimeType.startsWith("text/"))
+    return <FileText className="w-5 h-5 text-slate-300" />;
   return <FileIcon className="w-5 h-5 text-slate-400" />;
 };
 
@@ -63,20 +76,24 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
   const [dragActive, setDragActive] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const { uploadAttachment, deleteAttachment, isUploading, isDeleting, uploadProgress } =
-    useAttachments({
-      target,
-      targetId,
-      queryKeysToInvalidate,
-    });
+  const {
+    uploadAttachment,
+    deleteAttachment,
+    isUploading,
+    isDeleting,
+    uploadProgress,
+  } = useAttachments({
+    target,
+    targetId,
+    queryKeysToInvalidate,
+  });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    for (let i = 0; i < files.length; i++) {
-      await uploadAttachment(files[i]);
-    }
+    const fileList = Array.from(files);
+    await Promise.allSettled(fileList.map((file) => uploadAttachment(file)));
 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -98,9 +115,8 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const files = e.dataTransfer.files;
-      for (let i = 0; i < files.length; i++) {
-        await uploadAttachment(files[i]);
-      }
+      const fileList = Array.from(files);
+      await Promise.allSettled(fileList.map((file) => uploadAttachment(file)));
     }
   };
 
@@ -132,7 +148,11 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
           </span>
         </div>
         <button className="text-text-muted hover:text-text-primary transition-colors">
-          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
         </button>
       </div>
 
@@ -162,8 +182,12 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="w-8 h-8 text-primary-accent animate-spin" />
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-text-primary">Uploading attachment...</p>
-                  <p className="text-xs text-text-muted mt-1">{uploadProgress}% complete</p>
+                  <p className="text-sm font-semibold text-text-primary">
+                    Uploading attachment...
+                  </p>
+                  <p className="text-xs text-text-muted mt-1">
+                    {uploadProgress}% complete
+                  </p>
                 </div>
                 {/* Micro progress bar */}
                 <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden mt-1">
@@ -198,7 +222,8 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
           {attachments.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {attachments.map((file) => {
-                const isUploader = currentUserId && file.uploaded_by === currentUserId;
+                const isUploader =
+                  currentUserId && file.uploaded_by === currentUserId;
 
                 return (
                   <div
@@ -216,7 +241,10 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
                         {getFileIcon(file.file_type)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-text-primary truncate group-hover/link:text-primary-accent transition-colors" title={file.file_name}>
+                        <p
+                          className="text-sm font-bold text-text-primary truncate group-hover/link:text-primary-accent transition-colors"
+                          title={file.file_name}
+                        >
                           {file.file_name}
                         </p>
                         <div className="flex items-center gap-2 mt-0.5 text-xs text-text-muted">
@@ -240,7 +268,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({
                       >
                         <Download className="w-4 h-4" />
                       </a>
-                      {(isUploader || isDeleting) && (
+                      {isUploader && (
                         <button
                           onClick={() => handleDelete(file.id)}
                           disabled={isDeleting}

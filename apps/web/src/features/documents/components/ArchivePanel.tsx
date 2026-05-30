@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ArchiveRestore,
   Trash2,
@@ -8,7 +8,6 @@ import {
   Square,
   AlertCircle,
   Clock,
-  Sparkles,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -58,12 +57,15 @@ export const ArchivePanel = ({
   };
 
   // Filter documents based on search
-  const filteredDocs = useMemo(() => {
+  useEffect(() => {
     setPage(1); // Reset page on search change
+  }, [searchQuery, documents]);
+
+  const filteredDocs = useMemo(() => {
     return documents.filter((doc) =>
       (doc.title || "Untitled")
         .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+        .includes(searchQuery.toLowerCase()),
     );
   }, [documents, searchQuery]);
 
@@ -78,7 +80,7 @@ export const ArchivePanel = ({
   // Toggle selection for a single document
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -100,9 +102,12 @@ export const ArchivePanel = ({
 
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) return;
-    
+
     const count = selectedIds.length;
-    const title = count === 1 ? "Permanently Delete Document" : "Permanently Delete Documents";
+    const title =
+      count === 1
+        ? "Permanently Delete Document"
+        : "Permanently Delete Documents";
     const description =
       count === 1
         ? "Are you sure you want to permanently delete this document? This action cannot be undone and will delete all attachments."
@@ -129,7 +134,6 @@ export const ArchivePanel = ({
 
       {/* Drawer */}
       <div className="fixed inset-y-0 right-0 w-full sm:w-[460px] bg-surface-secondary/95 backdrop-blur-xl border-l border-white/10 shadow-2xl flex flex-col z-50 animate-in slide-in-from-right duration-300">
-        
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10 bg-surface-elevated/40">
           <div className="flex items-center gap-3">
@@ -139,7 +143,8 @@ export const ArchivePanel = ({
             <div>
               <h2 className="text-lg font-bold text-text-primary">Trash Bin</h2>
               <p className="text-xs text-text-muted">
-                {documents.length} item{documents.length !== 1 ? "s" : ""} archived
+                {documents.length} item{documents.length !== 1 ? "s" : ""}{" "}
+                archived
               </p>
             </div>
           </div>
@@ -156,7 +161,8 @@ export const ArchivePanel = ({
           <div className="px-6 py-3 bg-danger/5 border-b border-danger/10 flex items-start gap-3">
             <AlertCircle className="w-4 h-4 text-danger/70 mt-0.5 shrink-0" />
             <p className="text-[11px] text-text-muted leading-relaxed">
-              Items in the trash bin are archived. Deleting them forever is permanent.
+              Items in the trash bin are archived. Deleting them forever is
+              permanent.
             </p>
           </div>
         )}
@@ -182,7 +188,8 @@ export const ArchivePanel = ({
                 onClick={toggleSelectAll}
                 className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors font-medium"
               >
-                {selectedIds.length === filteredDocs.length && filteredDocs.length > 0 ? (
+                {selectedIds.length === filteredDocs.length &&
+                filteredDocs.length > 0 ? (
                   <CheckSquare className="w-4 h-4 text-primary-accent" />
                 ) : (
                   <Square className="w-4 h-4 text-text-muted" />
@@ -351,7 +358,10 @@ export const ArchivePanel = ({
 
       <ConfirmModal
         isOpen={deleteConfirmInfo.isOpen}
-        onClose={() => !isDeleting && setDeleteConfirmInfo((prev) => ({ ...prev, isOpen: false }))}
+        onClose={() =>
+          !isDeleting &&
+          setDeleteConfirmInfo((prev) => ({ ...prev, isOpen: false }))
+        }
         onConfirm={handleConfirmAction}
         title={deleteConfirmInfo.title}
         description={deleteConfirmInfo.description}

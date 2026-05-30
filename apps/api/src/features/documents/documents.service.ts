@@ -126,7 +126,7 @@ export const listDocuments = async (
     const [documents, total] = await Promise.all([
       prisma.document.findMany({
         where: { workspace_id: workspaceId, is_archived: false },
-        include: documentInclude,
+        include: documentIncludeWithAttachments,
         orderBy: { updated_at: 'desc' },
         skip,
         take: limit,
@@ -149,7 +149,7 @@ export const listDocuments = async (
 
   const documents = await prisma.document.findMany({
     where: { workspace_id: workspaceId, is_archived: false },
-    include: documentInclude,
+    include: documentIncludeWithAttachments,
     orderBy: { updated_at: 'desc' },
   });
 

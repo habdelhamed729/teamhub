@@ -23,6 +23,7 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { HorizontalRule } from "@tiptap/extension-horizontal-rule";
 import Link from "@tiptap/extension-link";
+import Underline from "@tiptap/extension-underline";
 
 const lowlight = createLowlight(common);
 
@@ -107,6 +108,7 @@ const extensions = [
       rel: "noopener noreferrer",
     },
   }),
+  Underline,
   Placeholder.configure({
     placeholder: "Type '/' for commands, or just start writing...",
   }),

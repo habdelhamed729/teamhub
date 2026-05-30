@@ -31,9 +31,7 @@ import "../styles/editor.css";
 const getWordCount = (editor: Editor | null) => {
   if (!editor) return { words: 0, chars: 0, readingTime: "0 min" };
   const text = editor.state.doc.textContent;
-  const words = text
-    .split(/\s+/)
-    .filter((w) => w.length > 0).length;
+  const words = text.split(/\s+/).filter((w) => w.length > 0).length;
   const chars = text.length;
   const readingTime = Math.max(1, Math.ceil(words / 200));
   return { words, chars, readingTime: `${readingTime} min read` };
@@ -49,15 +47,18 @@ export const DocumentEditorPage = () => {
   const navigate = useNavigate();
   const { data: document, isLoading } = useDocument(documentId!);
   const { mutate: archiveDoc } = useArchiveDocument(workspaceId!);
-  const { mutateAsync: deleteDoc, isPending: isDeleting } = useDeleteDocument(workspaceId!);
+  const { mutateAsync: deleteDoc, isPending: isDeleting } = useDeleteDocument(
+    workspaceId!,
+  );
   const { mutateAsync: updateDoc } = useUpdateDocument();
   const currentUser = useAuthStore((state) => state.user);
 
-  const { uploadAttachment, isUploading: isUploadingAttachment } = useAttachments({
-    target: "document",
-    targetId: documentId!,
-    queryKeysToInvalidate: [["document", documentId]],
-  });
+  const { uploadAttachment, isUploading: isUploadingAttachment } =
+    useAttachments({
+      target: "document",
+      targetId: documentId!,
+      queryKeysToInvalidate: [["document", documentId]],
+    });
 
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,20 +83,59 @@ export const DocumentEditorPage = () => {
 
   // Curated list of premium cover gradients/solids and emojis
   const EMOJIS = [
-    "📝", "📁", "🚀", "💡", "📅", "🎯", "🎨", "🛠️", 
-    "📊", "💻", "🔒", "🌍", "⚡", "🔔", "✉️", "🔥", 
-    "🏆", "🌟", "🌈", "🍎", "🍕", "✈️", "🏡", "🐾"
+    "📝",
+    "📁",
+    "🚀",
+    "💡",
+    "📅",
+    "🎯",
+    "🎨",
+    "🛠️",
+    "📊",
+    "💻",
+    "🔒",
+    "🌍",
+    "⚡",
+    "🔔",
+    "✉️",
+    "🔥",
+    "🏆",
+    "🌟",
+    "🌈",
+    "🍎",
+    "🍕",
+    "✈️",
+    "🏡",
+    "🐾",
   ];
 
   const COVERS = [
-    { name: "Sunset", value: "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500" },
-    { name: "Aurora", value: "bg-gradient-to-r from-green-300 via-blue-500 to-purple-600" },
-    { name: "Cherry", value: "bg-gradient-to-r from-yellow-100 via-pink-300 to-red-500" },
-    { name: "Ocean", value: "bg-gradient-to-r from-blue-700 via-blue-800 to-gray-900" },
-    { name: "Galaxy", value: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" },
-    { name: "Grass", value: "bg-gradient-to-r from-yellow-200 via-green-200 to-green-500" },
+    {
+      name: "Sunset",
+      value: "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500",
+    },
+    {
+      name: "Aurora",
+      value: "bg-gradient-to-r from-green-300 via-blue-500 to-purple-600",
+    },
+    {
+      name: "Cherry",
+      value: "bg-gradient-to-r from-yellow-100 via-pink-300 to-red-500",
+    },
+    {
+      name: "Ocean",
+      value: "bg-gradient-to-r from-blue-700 via-blue-800 to-gray-900",
+    },
+    {
+      name: "Galaxy",
+      value: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500",
+    },
+    {
+      name: "Grass",
+      value: "bg-gradient-to-r from-yellow-200 via-green-200 to-green-500",
+    },
     { name: "Onyx", value: "bg-[#1E1E2E]" },
-    { name: "Violet", value: "bg-[#2D1B4E]" }
+    { name: "Violet", value: "bg-[#2D1B4E]" },
   ];
 
   const handleUpdateIcon = async (newIcon: string | null) => {
@@ -169,11 +209,7 @@ export const DocumentEditorPage = () => {
     try {
       setIsUploading(true);
       const result = await uploadImage(file);
-      editorRef
-        .chain()
-        .focus()
-        .setImage({ src: result.url })
-        .run();
+      editorRef.chain().focus().setImage({ src: result.url }).run();
     } catch (err) {
       console.error("Image upload failed:", err);
     } finally {
@@ -183,7 +219,9 @@ export const DocumentEditorPage = () => {
   };
 
   // Attachment upload handler
-  const handleAttachmentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAttachmentUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file || !editorRef) return;
 
@@ -194,7 +232,7 @@ export const DocumentEditorPage = () => {
         .chain()
         .focus()
         .insertContent(
-          `<a href="${result.url}" target="_blank" rel="noopener noreferrer" class="attachment-link">📎 ${result.file_name}</a> `
+          `<a href="${result.url}" target="_blank" rel="noopener noreferrer" class="attachment-link">📎 ${result.file_name}</a> `,
         )
         .run();
     } catch (err) {
@@ -393,6 +431,8 @@ export const DocumentEditorPage = () => {
                   onClick={() => {
                     setShowOptions(false);
                     archiveDoc(documentId!);
+                    toast.success("Document archived successfully");
+                    navigate(`/workspaces/${workspaceId}/documents`);
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
                 >
@@ -436,7 +476,7 @@ export const DocumentEditorPage = () => {
                 Remove
               </button>
             </div>
-            
+
             {showCoverPicker && (
               <div className="absolute right-8 bottom-12 bg-surface-elevated border border-white/10 p-3 rounded-xl shadow-2xl z-50 grid grid-cols-4 gap-2 w-64">
                 {COVERS.map((c) => (
@@ -458,14 +498,16 @@ export const DocumentEditorPage = () => {
         <div className="max-w-4xl mx-auto px-8 py-12 relative group/header">
           {/* Overlapping/Inline Page Icon */}
           {icon ? (
-            <div className={`relative z-10 ${coverUrl ? "-mt-20 mb-4" : "mb-6"}`}>
+            <div
+              className={`relative z-10 ${coverUrl ? "-mt-20 mb-4" : "mb-6"}`}
+            >
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 className="text-5xl hover:scale-105 transition-transform p-2.5 bg-main-bg rounded-2xl border border-white/5 cursor-pointer shadow-xl inline-block"
               >
                 {icon}
               </button>
-              
+
               {showEmojiPicker && (
                 <div className="absolute left-0 top-full mt-2 bg-surface-elevated border border-white/10 p-3 rounded-xl shadow-2xl z-50 grid grid-cols-6 gap-2 w-64">
                   {EMOJIS.map((emo) => (
