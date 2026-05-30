@@ -22,17 +22,13 @@ const upload = multer({
 
 router.use(requireAuth);
 
-// POST /uploads - Upload file and link to a target message/document/task
 router.post("/", upload.single("file"), AttachmentsController.uploadAttachment);
 
-// GET /attachments/:attachmentId - Get attachment metadata
 router.get("/:attachmentId", AttachmentsController.getAttachment);
 
-// DELETE /attachments/:attachmentId - Delete attachment
 router.delete("/:attachmentId", AttachmentsController.deleteAttachment);
 
 // ─── Multer Error Handler ───────────────────────────────────────────────────
-// Must be defined after routes so Express recognizes it as an error middleware.
 router.use((err: any, _req: Request, res: Response, next: NextFunction) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {

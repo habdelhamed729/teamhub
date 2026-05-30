@@ -119,6 +119,8 @@ export const listDocuments = async (
   page?: number,
   limit?: number,
 ) => {
+  await verifyWorkspaceMembership(workspaceId, userId);
+
   if (page !== undefined && limit !== undefined) {
     const skip = (page - 1) * limit;
     const [documents, total] = await Promise.all([
@@ -162,6 +164,8 @@ export const listArchivedDocuments = async (
   page?: number,
   limit?: number,
 ) => {
+  await verifyWorkspaceMembership(workspaceId, userId);
+
   if (page !== undefined && limit !== undefined) {
     const skip = (page - 1) * limit;
     const [documents, total] = await Promise.all([
@@ -204,6 +208,8 @@ export const createDocument = async (
   userId: string,
   dto: CreateDocumentInput,
 ) => {
+  await verifyWorkspaceMembership(workspaceId, userId);
+
   // If parent_id is provided, verify it belongs to the same workspace
   if (dto.parent_id) {
     const parent = await prisma.document.findUnique({

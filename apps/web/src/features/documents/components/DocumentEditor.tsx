@@ -22,6 +22,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { HorizontalRule } from "@tiptap/extension-horizontal-rule";
+import Link from "@tiptap/extension-link";
 
 const lowlight = createLowlight(common);
 
@@ -97,8 +98,13 @@ const extensions = [
     heading: { levels: [1, 2, 3] },
     codeBlock: false,
     horizontalRule: false,
-    link: {
-      openOnClick: false,
+  }),
+  Link.configure({
+    openOnClick: true,
+    autolink: true,
+    HTMLAttributes: {
+      target: "_blank",
+      rel: "noopener noreferrer",
     },
   }),
   Placeholder.configure({

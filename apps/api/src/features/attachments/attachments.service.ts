@@ -27,20 +27,43 @@ const detectResourceType = (url: string): string => {
 };
 
 /**
+ * Detects the Cloudinary resource type from a file mimetype.
+ */
+const getCloudinaryResourceType = (mimetype: string): "image" | "video" | "raw" => {
+  const mimeLower = mimetype.toLowerCase();
+  if (
+    mimeLower.startsWith("image/") &&
+    !mimeLower.includes("pdf") &&
+    !mimeLower.includes("tiff") &&
+    !mimeLower.includes("psd")
+  ) {
+    return "image";
+  }
+  if (mimeLower.startsWith("video/") || mimeLower.startsWith("audio/")) {
+    return "video";
+  }
+  return "raw";
+};
+
+/**
  * Uploads a file buffer to Cloudinary using standard resource detection.
  */
 const uploadToCloudinary = (
   fileBuffer: Buffer,
-  fileName: string
+  fileName: string,
+  resourceType: "image" | "video" | "raw"
 ): Promise<{ secure_url: string; public_id: string }> => {
   return new Promise((resolve, reject) => {
-    // Strip file extension from public_id to let Cloudinary manage URLs cleanly
-    const cleanPublicIdName = fileName.replace(/\.[^/.]+$/, "");
+    // Clean spaces and special characters from the file name.
+    const cleanFileName = fileName
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9_\.-]/g, "");
+    
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: "teamhub/attachments",
-        resource_type: "auto", // Auto-detects image, raw document, audio, video, etc.
-        public_id: `${Date.now()}-${cleanPublicIdName}`,
+        resource_type: resourceType,
+        public_id: `${Date.now()}-${cleanFileName}`,
       },
       (error, result) => {
         if (error) reject(error);
@@ -53,7 +76,6 @@ const uploadToCloudinary = (
 
 /**
  * Deletes an asset from Cloudinary using its secure URL.
- * Non-blocking best-effort — logs errors but never throws.
  */
 export const deleteFromCloudinary = async (url: string): Promise<void> => {
   try {
@@ -61,7 +83,18 @@ export const deleteFromCloudinary = async (url: string): Promise<void> => {
     if (!publicId) return;
 
     const resourceType = detectResourceType(url);
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    
+    // For raw files, Cloudinary destroy expects the extension to be part of the public ID
+    let finalPublicId = publicId;
+    if (resourceType === "raw") {
+      const parts = url.split("/upload/");
+      if (parts.length >= 2) {
+        const pathAfterUpload = parts[1]!;
+        finalPublicId = pathAfterUpload.replace(/^v\d+\//, ""); // includes folder and extension
+      }
+    }
+
+    await cloudinary.uploader.destroy(finalPublicId, { resource_type: resourceType });
   } catch (error) {
     console.error(`Failed to delete Cloudinary asset for ${url}:`, error);
   }
@@ -74,60 +107,6 @@ const uploaderSelect = {
 } as const;
 
 // ─── Access Control ─────────────────────────────────────────────────────────
-
-/**
- * Resolves the workspace_id for a given attachment target.
- * Returns null for targets that don't yet track workspace (e.g. placeholder Task model).
- */
-const resolveWorkspaceId = async (
-  target: AttachmentTarget,
-  targetId: string
-): Promise<string | null> => {
-  if (target === "document") {
-    const document = await prisma.document.findUnique({
-      where: { id: targetId },
-      select: { workspace_id: true, is_archived: true },
-    });
-    if (!document || document.is_archived) {
-      throw Object.assign(new Error("Document not found or archived"), { status: 404 });
-    }
-    return document.workspace_id;
-  }
-
-  if (target === "message") {
-    // targetId can be either a message ID or a channel ID (pre-upload flow)
-    const message = await prisma.message.findUnique({
-      where: { id: targetId },
-      include: { channel: { select: { id: true, workspace_id: true, type: true, created_by_id: true } } },
-    });
-
-    // If the targetId matched a message, use its channel
-    const channel = message?.channel ?? await prisma.channel.findUnique({
-      where: { id: targetId },
-      select: { id: true, workspace_id: true, type: true, created_by_id: true },
-    });
-
-    if (!channel) {
-      throw Object.assign(new Error("Message or Channel target not found"), { status: 404 });
-    }
-
-    // Store channel info for private channel check in assertTargetAccess
-    return channel.workspace_id;
-  }
-
-  if (target === "task") {
-    const task = await prisma.task.findUnique({
-      where: { id: targetId },
-    });
-    if (!task) {
-      throw Object.assign(new Error("Task not found"), { status: 404 });
-    }
-    return null; // Task model doesn't have workspace_id yet
-  }
-
-  throw Object.assign(new Error("Invalid attachment target"), { status: 400 });
-};
-
 /**
  * Asserts that the user has authorization to access the targeted entity.
  * Returns { isMessage: boolean } so callers know whether the targetId is
@@ -226,7 +205,8 @@ export const createAttachment = async (
   const { isMessage } = await assertTargetAccess(target, targetId, userId);
 
   // 2. Stream upload to Cloudinary
-  const uploadResult = await uploadToCloudinary(file.buffer, file.originalname);
+  const resourceType = getCloudinaryResourceType(file.mimetype);
+  const uploadResult = await uploadToCloudinary(file.buffer, file.originalname, resourceType);
 
   // 3. Persist record to DB — rollback Cloudinary on failure
   try {
@@ -285,29 +265,18 @@ export const getAttachment = async (attachmentId: string, userId: string) => {
   return attachment;
 };
 
-/**
- * Internal system deletion function to clean up Cloudinary assets and DB records
- * without checking ownership (used when cascading parent entity deletes).
- * Combines find + delete into a single DB operation.
- */
 export const deleteAttachmentRecord = async (attachmentId: string) => {
-  // Delete from DB in one shot — returns the deleted record or throws if not found
   const attachment = await prisma.attachment.delete({
     where: { id: attachmentId },
   }).catch(() => null);
 
   if (!attachment) return null;
 
-  // Non-blocking Cloudinary cleanup (best-effort)
   deleteFromCloudinary(attachment.url).catch(console.error);
 
   return attachment;
 };
 
-/**
- * Batch-deletes all attachments for a given target entity.
- * Cloudinary cleanup runs in parallel for performance, DB uses a single deleteMany.
- */
 export const deleteAttachmentsByTarget = async (
   target: AttachmentTarget,
   targetId: string
@@ -322,12 +291,9 @@ export const deleteAttachmentsByTarget = async (
     select: { url: true },
   });
 
-  // Delete from Cloudinary in parallel (best-effort)
   await Promise.allSettled(
     attachments.map(a => deleteFromCloudinary(a.url))
   );
-
-  // Batch delete from DB in one query
   await prisma.attachment.deleteMany({ where: whereClause });
 };
 
@@ -344,9 +310,7 @@ export const deleteAttachment = async (attachmentId: string, userId: string) => 
     throw Object.assign(new Error("Attachment not found"), { status: 404 });
   }
 
-  // Fast path: the uploader can always delete their own attachment
   if (attachment.uploaded_by !== userId) {
-    // Slow path: check if user is a workspace admin/owner for the linked entity
     const isAdmin = await checkWorkspaceAdminForAttachment(attachment, userId);
     if (!isAdmin) {
       throw Object.assign(new Error("Only the uploader or a workspace admin can delete this attachment"), {

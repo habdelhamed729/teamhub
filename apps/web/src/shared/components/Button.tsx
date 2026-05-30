@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes } from 'react';
 
 interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-solid';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   onClick?: ButtonHTMLAttributes<HTMLButtonElement>['onClick'];
@@ -28,6 +28,7 @@ export function Button({
     secondary: 'bg-surface-elevated text-text-primary hover:bg-surface-secondary border border-white/5',
     ghost: 'bg-transparent text-text-secondary hover:text-text-primary hover:bg-white/5',
     danger: 'bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20',
+    'danger-solid': 'bg-danger hover:bg-danger/80 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] border border-transparent',
   };
 
   const sizes = {

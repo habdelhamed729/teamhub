@@ -75,3 +75,17 @@ body {
   scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
 
+/* Global cursor pointers for interactive elements */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="file"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  cursor: pointer !important;
+}
+
+

@@ -6,6 +6,7 @@ import {
   Archive,
   Trash2,
   FolderInput,
+  Paperclip,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import type { Document } from "@teamhub/shared";
@@ -88,6 +89,12 @@ export const DocumentCard = ({
           )}
         </div>
         <div className="flex items-center gap-3 text-xs text-text-muted shrink-0">
+          {document.attachments && document.attachments.length > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-text-muted/80 bg-white/5 px-2 py-0.5 rounded-md font-medium shrink-0">
+              <Paperclip className="w-3.5 h-3.5 text-primary-accent" />
+              <span>{document.attachments.length}</span>
+            </div>
+          )}
           {isRecent && (
             <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           )}
@@ -229,21 +236,29 @@ export const DocumentCard = ({
       <div
         className={`mt-auto flex items-center justify-between relative z-10 ${compact ? "" : "pt-3 border-t border-white/5"}`}
       >
-        <div className="flex items-center gap-2">
-          {document.creator?.avatar_url ? (
-            <img
-              src={document.creator.avatar_url}
-              alt=""
-              className="w-5 h-5 rounded-full ring-1 ring-surface-elevated"
-            />
-          ) : (
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary-accent to-blue-500 flex items-center justify-center text-[9px] font-bold text-main-bg ring-1 ring-surface-elevated">
-              {document.creator?.display_name?.charAt(0).toUpperCase() || "?"}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {document.creator?.avatar_url ? (
+              <img
+                src={document.creator.avatar_url}
+                alt=""
+                className="w-5 h-5 rounded-full ring-1 ring-surface-elevated"
+              />
+            ) : (
+              <div className="w-5 h-5 rounded-full bg-linear-to-br from-primary-accent to-blue-500 flex items-center justify-center text-[9px] font-bold text-main-bg ring-1 ring-surface-elevated">
+                {document.creator?.display_name?.charAt(0).toUpperCase() || "?"}
+              </div>
+            )}
+            <span className="text-[11px] text-text-muted truncate max-w-[80px]">
+              {document.creator?.display_name || "Unknown"}
+            </span>
+          </div>
+          {document.attachments && document.attachments.length > 0 && (
+            <div className="flex items-center gap-1 text-[10px] text-text-muted/80 bg-white/5 px-1.5 py-0.5 rounded-md font-medium shrink-0">
+              <Paperclip className="w-3.5 h-3.5 text-primary-accent" />
+              <span>{document.attachments.length}</span>
             </div>
           )}
-          <span className="text-[11px] text-text-muted truncate max-w-[100px]">
-            {document.creator?.display_name || "Unknown"}
-          </span>
         </div>
 
         {!compact && (

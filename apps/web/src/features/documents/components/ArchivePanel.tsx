@@ -11,12 +11,13 @@ import {
   Sparkles,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import type { Document } from "@teamhub/shared";
 
 interface ArchivePanelProps {
   documents: Document[];
   onRestore: (id: string) => void;
-  onDeleteForever: (id: string) => void;
+  onDeleteForever: (ids: string | string[]) => Promise<any>;
   onClose: () => void;
 }
 
@@ -29,8 +30,32 @@ export const ArchivePanel = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeletingBatch, setIsDeletingBatch] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [page, setPage] = useState(1);
   const itemsPerPage = 6;
+  const [deleteConfirmInfo, setDeleteConfirmInfo] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => Promise<any> | void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
+  const handleConfirmAction = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteConfirmInfo.onConfirm();
+      setDeleteConfirmInfo((prev) => ({ ...prev, isOpen: false }));
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Filter documents based on search
   const filteredDocs = useMemo(() => {
@@ -73,22 +98,25 @@ export const ArchivePanel = ({
     setSelectedIds([]);
   };
 
-  // Batch delete forever
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) return;
     
     const count = selectedIds.length;
-    const confirmMessage =
+    const title = count === 1 ? "Permanently Delete Document" : "Permanently Delete Documents";
+    const description =
       count === 1
-        ? "Are you sure you want to permanently delete this document? This action cannot be undone."
-        : `Are you sure you want to permanently delete these ${count} documents? This action cannot be undone.`;
+        ? "Are you sure you want to permanently delete this document? This action cannot be undone and will delete all attachments."
+        : `Are you sure you want to permanently delete these ${count} documents? This action cannot be undone and will delete all associated attachments.`;
 
-    if (window.confirm(confirmMessage)) {
-      setIsDeletingBatch(true);
-      selectedIds.forEach((id) => onDeleteForever(id));
-      setSelectedIds([]);
-      setIsDeletingBatch(false);
-    }
+    setDeleteConfirmInfo({
+      isOpen: true,
+      title,
+      description,
+      onConfirm: async () => {
+        await onDeleteForever(selectedIds);
+        setSelectedIds([]);
+      },
+    });
   };
 
   return (
@@ -266,15 +294,14 @@ export const ArchivePanel = ({
                         </button>
                         <button
                           onClick={() => {
-                            if (
-                              window.confirm(
-                                `Are you sure you want to permanently delete "${
-                                  doc.title || "Untitled"
-                                }"? This action cannot be undone.`
-                              )
-                            ) {
-                              onDeleteForever(doc.id);
-                            }
+                            setDeleteConfirmInfo({
+                              isOpen: true,
+                              title: "Permanently Delete Document",
+                              description: `Are you sure you want to permanently delete "${
+                                doc.title || "Untitled"
+                              }"? This action cannot be undone and will delete all attachments.`,
+                              onConfirm: async () => onDeleteForever(doc.id),
+                            });
                           }}
                           className="p-2 bg-white/5 hover:bg-danger hover:text-white text-text-muted rounded-lg transition-all"
                           title="Delete forever"
@@ -321,6 +348,18 @@ export const ArchivePanel = ({
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={deleteConfirmInfo.isOpen}
+        onClose={() => !isDeleting && setDeleteConfirmInfo((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={handleConfirmAction}
+        title={deleteConfirmInfo.title}
+        description={deleteConfirmInfo.description}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDanger={true}
+        isLoading={isDeleting}
+      />
     </>
   );
 };

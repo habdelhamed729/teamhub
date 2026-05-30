@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Plus,
   Search,
@@ -37,8 +38,36 @@ export const DocumentsPage = () => {
   const { data: documentsData, isLoading } = useDocuments(workspaceId!, page, limit);
   const { data: archivedDocumentsData } = useArchivedDocuments(workspaceId!);
   const { mutate: archiveDoc } = useArchiveDocument(workspaceId!);
-  const { mutate: deleteDoc } = useDeleteDocument(workspaceId!);
+  const { mutateAsync: deleteDoc } = useDeleteDocument(workspaceId!);
   const { mutate: restoreDoc } = useRestoreDocument(workspaceId!);
+
+  const handleDeleteDocument = async (ids: string | string[]) => {
+    const isBatch = Array.isArray(ids);
+    const promise = isBatch
+      ? Promise.all(ids.map((id) => deleteDoc(id))).then(() => {})
+      : deleteDoc(ids);
+
+    const getDocTitle = (id: string) => {
+      const doc = activeDocs.find((d) => d.id === id) || archivedDocuments.find((d) => d.id === id);
+      return doc?.title || "Untitled Document";
+    };
+
+    const loadingMsg = isBatch
+      ? `Deleting ${ids.length} documents...`
+      : `Deleting "${getDocTitle(ids as string)}"...`;
+
+    const successMsg = isBatch
+      ? `${ids.length} documents deleted permanently`
+      : `"${getDocTitle(ids as string)}" deleted permanently`;
+
+    toast.promise(promise, {
+      loading: loadingMsg,
+      success: successMsg,
+      error: "Failed to delete document(s)",
+    });
+
+    return promise;
+  };
 
   const archivedDocuments = archivedDocumentsData?.documents || [];
 
@@ -224,7 +253,7 @@ export const DocumentsPage = () => {
                   document={doc}
                   workspaceId={workspaceId!}
                   onArchive={archiveDoc}
-                  onDelete={deleteDoc}
+                  onDelete={handleDeleteDocument}
                   listMode={viewMode === "list"}
                 />
               ))}
@@ -300,7 +329,7 @@ export const DocumentsPage = () => {
         <ArchivePanel
           documents={archivedDocuments || []}
           onRestore={restoreDoc}
-          onDeleteForever={deleteDoc}
+          onDeleteForever={handleDeleteDocument}
           onClose={() => setIsTrashOpen(false)}
         />
       )}

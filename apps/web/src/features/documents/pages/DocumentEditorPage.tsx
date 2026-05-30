@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -12,12 +13,17 @@ import {
   Clock,
   FileText,
   ImagePlus,
+  Paperclip,
 } from "lucide-react";
 import { useDocument, useUpdateDocument } from "../hooks/useDocument";
 import { useArchiveDocument, useDeleteDocument } from "../hooks/useDocuments";
 import { useAutoSave } from "../hooks/useAutoSave";
 import { DocumentEditor } from "../components/DocumentEditor";
 import { uploadImage } from "../api/documents.api";
+import { useAuthStore } from "@/app/store/useAuthStore";
+import { AttachmentManager } from "@/shared/components/AttachmentManager";
+import { useAttachments } from "@/shared/hooks/useAttachments";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import type { JSONContent, Editor } from "@tiptap/react";
 import "../styles/editor.css";
 
@@ -40,16 +46,27 @@ export const DocumentEditorPage = () => {
     documentId: string;
   }>();
 
+  const navigate = useNavigate();
   const { data: document, isLoading } = useDocument(documentId!);
   const { mutate: archiveDoc } = useArchiveDocument(workspaceId!);
-  const { mutate: deleteDoc } = useDeleteDocument(workspaceId!);
+  const { mutateAsync: deleteDoc, isPending: isDeleting } = useDeleteDocument(workspaceId!);
   const { mutateAsync: updateDoc } = useUpdateDocument();
+  const currentUser = useAuthStore((state) => state.user);
+
+  const { uploadAttachment, isUploading: isUploadingAttachment } = useAttachments({
+    target: "document",
+    targetId: documentId!,
+    queryKeysToInvalidate: [["document", documentId]],
+  });
+
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const [content, setContent] = useState<JSONContent | null>(null);
   const [title, setTitle] = useState("");
   const [icon, setIcon] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [showOptions, setShowOptions] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [editorRef, setEditorRef] = useState<Editor | null>(null);
@@ -165,6 +182,40 @@ export const DocumentEditorPage = () => {
     }
   };
 
+  // Attachment upload handler
+  const handleAttachmentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editorRef) return;
+
+    try {
+      const result = await uploadAttachment(file);
+      // Insert the custom styled link at the cursor position in the editor
+      editorRef
+        .chain()
+        .focus()
+        .insertContent(
+          `<a href="${result.url}" target="_blank" rel="noopener noreferrer" class="attachment-link">📎 ${result.file_name}</a> `
+        )
+        .run();
+    } catch (err) {
+      console.error("Attachment upload failed:", err);
+    } finally {
+      if (attachmentInputRef.current) attachmentInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteDocument = async () => {
+    const toastId = toast.loading("Deleting document...");
+    try {
+      await deleteDoc(documentId!);
+      toast.success("Document deleted permanently", { id: toastId });
+      setIsDeleteModalOpen(false);
+      navigate(`/workspaces/${workspaceId}/documents`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete document", { id: toastId });
+    }
+  };
+
   const { saveStatus } = useAutoSave({
     documentId: documentId!,
     title,
@@ -267,6 +318,26 @@ export const DocumentEditorPage = () => {
             onChange={handleImageUpload}
           />
 
+          {/* Upload attachment button */}
+          <button
+            onClick={() => attachmentInputRef.current?.click()}
+            disabled={isUploadingAttachment}
+            className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50"
+            title="Attach file inline"
+          >
+            {isUploadingAttachment ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Paperclip className="w-4 h-4" />
+            )}
+          </button>
+          <input
+            ref={attachmentInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleAttachmentUpload}
+          />
+
           {/* Save status */}
           <div className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-lg bg-white/5">
             {saveStatus === "saving" && (
@@ -331,14 +402,8 @@ export const DocumentEditorPage = () => {
                 <div className="h-px bg-white/5 my-1" />
                 <button
                   onClick={() => {
-                    if (
-                      window.confirm(
-                        "Are you sure you want to delete this document?",
-                      )
-                    ) {
-                      setShowOptions(false);
-                      deleteDoc(documentId!);
-                    }
+                    setShowOptions(false);
+                    setIsDeleteModalOpen(true);
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 text-sm text-danger hover:bg-danger/10 transition-colors font-medium"
                 >
@@ -469,8 +534,28 @@ export const DocumentEditorPage = () => {
             onChange={handleContentChange}
             onEditorReady={handleEditorReady}
           />
+
+          {/* Attachments Section */}
+          <AttachmentManager
+            target="document"
+            targetId={documentId!}
+            attachments={document.attachments || []}
+            currentUserId={currentUser?.id}
+            queryKeysToInvalidate={[["document", documentId]]}
+          />
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteDocument}
+        title="Delete Document"
+        description="Are you sure you want to permanently delete this document? This action will also delete all of its child documents and attachments. This cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
