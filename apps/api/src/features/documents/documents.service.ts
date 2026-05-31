@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import type { CreateDocumentInput, UpdateDocumentInput } from '@teamhub/shared';
+import { deleteAttachmentsByTarget } from '../attachments/attachments.service';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -14,7 +15,13 @@ const documentInclude = {
 const documentIncludeWithAttachments = {
   creator: { select: creatorSelect },
   last_editor: { select: creatorSelect },
-  attachments: true,
+  attachments: {
+    include: {
+      uploader: {
+        select: creatorSelect,
+      },
+    },
+  },
 } as const;
 
 /** Verify user is a member of the workspace. Throws 403 if not. */
@@ -70,34 +77,35 @@ const findAnyDocument = async (documentId: string, userId: string) => {
   return document;
 };
 
-const archiveDescendants = async (parentId: string, date: Date) => {
-  const children = await prisma.document.findMany({
-    where: { parent_id: parentId, is_archived: false },
-  });
-  if (children.length === 0) return;
-
-  await prisma.document.updateMany({
-    where: { parent_id: parentId, is_archived: false },
-    data: { is_archived: true, archived_at: date },
+/** Get all descendant IDs of a document in-memory using a single workspace fetch */
+const getDescendantIds = async (workspaceId: string, parentId: string): Promise<string[]> => {
+  const allDocs = await prisma.document.findMany({
+    where: { workspace_id: workspaceId },
+    select: { id: true, parent_id: true },
   });
 
-  for (const child of children) {
-    await archiveDescendants(child.id, date);
+  const parentToChildren = new Map<string, string[]>();
+  for (const doc of allDocs) {
+    if (doc.parent_id) {
+      if (!parentToChildren.has(doc.parent_id)) {
+        parentToChildren.set(doc.parent_id, []);
+      }
+      parentToChildren.get(doc.parent_id)!.push(doc.id);
+    }
   }
-};
 
-const deleteDescendants = async (parentId: string) => {
-  const children = await prisma.document.findMany({
-    where: { parent_id: parentId },
-  });
-  for (const child of children) {
-    await deleteDescendants(child.id);
+  const descendantIds: string[] = [];
+  const queue = [parentId];
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    const children = parentToChildren.get(currentId) || [];
+    for (const childId of children) {
+      descendantIds.push(childId);
+      queue.push(childId);
+    }
   }
-  if (children.length > 0) {
-    await prisma.document.deleteMany({
-      where: { parent_id: parentId },
-    });
-  }
+
+  return descendantIds;
 };
 
 // ─── list ────────────────────────────────────────────────────────────────────
@@ -108,12 +116,14 @@ export const listDocuments = async (
   page?: number,
   limit?: number,
 ) => {
+  await verifyWorkspaceMembership(workspaceId, userId);
+
   if (page !== undefined && limit !== undefined) {
     const skip = (page - 1) * limit;
     const [documents, total] = await Promise.all([
       prisma.document.findMany({
         where: { workspace_id: workspaceId, is_archived: false },
-        include: documentInclude,
+        include: documentIncludeWithAttachments,
         orderBy: { updated_at: 'desc' },
         skip,
         take: limit,
@@ -136,7 +146,7 @@ export const listDocuments = async (
 
   const documents = await prisma.document.findMany({
     where: { workspace_id: workspaceId, is_archived: false },
-    include: documentInclude,
+    include: documentIncludeWithAttachments,
     orderBy: { updated_at: 'desc' },
   });
 
@@ -151,6 +161,8 @@ export const listArchivedDocuments = async (
   page?: number,
   limit?: number,
 ) => {
+  await verifyWorkspaceMembership(workspaceId, userId);
+
   if (page !== undefined && limit !== undefined) {
     const skip = (page - 1) * limit;
     const [documents, total] = await Promise.all([
@@ -193,6 +205,8 @@ export const createDocument = async (
   userId: string,
   dto: CreateDocumentInput,
 ) => {
+  await verifyWorkspaceMembership(workspaceId, userId);
+
   // If parent_id is provided, verify it belongs to the same workspace
   if (dto.parent_id) {
     const parent = await prisma.document.findUnique({
@@ -269,8 +283,16 @@ export const archiveDocument = async (documentId: string, userId: string) => {
   const document = await findActiveDocument(documentId, userId);
   const now = new Date();
 
-  // Recursively archive all descendants
-  await archiveDescendants(document.id, now);
+  // Get descendant IDs in-memory
+  const descendantIds = await getDescendantIds(document.workspace_id, document.id);
+
+  // Batch archive all descendants in a single query
+  if (descendantIds.length > 0) {
+    await prisma.document.updateMany({
+      where: { id: { in: descendantIds }, is_archived: false },
+      data: { is_archived: true, archived_at: now },
+    });
+  }
 
   return prisma.document.update({
     where: { id: documentId },
@@ -298,15 +320,23 @@ export const restoreDocument = async (documentId: string, userId: string) => {
 // ─── delete (hard delete) ───────────────────────────────────────────────────
 
 export const deleteDocument = async (documentId: string, userId: string) => {
-  await findAnyDocument(documentId, userId);
+  const document = await findAnyDocument(documentId, userId);
 
-  // Recursively delete all descendants first to prevent foreign key violations
-  await deleteDescendants(documentId);
+  // Get descendant IDs in-memory
+  const descendantIds = await getDescendantIds(document.workspace_id, documentId);
 
-  // TODO (Issue 8): When upload service is built, fetch document's attachments
-  // and delete them from Cloudinary before hard-deleting the DB record.
-  // const attachments = await prisma.attachment.findMany({ where: { document_id: documentId } });
-  // await Promise.all(attachments.map(a => cloudinary.destroy(a.public_id)));
+  // Clean up attachments of this document and all descendants in parallel
+  const allTargetIds = [documentId, ...descendantIds];
+  await Promise.allSettled(
+    allTargetIds.map(targetId => deleteAttachmentsByTarget("document", targetId))
+  );
+
+  // Batch-delete child documents
+  if (descendantIds.length > 0) {
+    await prisma.document.deleteMany({
+      where: { id: { in: descendantIds } },
+    });
+  }
 
   return prisma.document.delete({
     where: { id: documentId },

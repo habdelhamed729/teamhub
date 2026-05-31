@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Plus,
   Search,
@@ -19,6 +20,8 @@ import {
 import { DocumentCard } from "../components/DocumentCard";
 import { CreateDocumentDialog } from "../components/CreateDocumentDialog";
 import { ArchivePanel } from "../components/ArchivePanel";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import { Button } from "@/shared/components/Button";
 
 type SortKey = "updated" | "title" | "created";
 type ViewMode = "grid" | "list";
@@ -26,6 +29,7 @@ type ViewMode = "grid" | "list";
 export const DocumentsPage = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>("updated");
@@ -36,9 +40,9 @@ export const DocumentsPage = () => {
 
   const { data: documentsData, isLoading } = useDocuments(workspaceId!, page, limit);
   const { data: archivedDocumentsData } = useArchivedDocuments(workspaceId!);
-  const { mutate: archiveDoc } = useArchiveDocument(workspaceId!);
-  const { mutate: deleteDoc } = useDeleteDocument(workspaceId!);
-  const { mutate: restoreDoc } = useRestoreDocument(workspaceId!);
+  const { mutateAsync: archiveDoc } = useArchiveDocument(workspaceId!);
+  const { mutateAsync: deleteDoc } = useDeleteDocument(workspaceId!);
+  const { mutateAsync: restoreDoc } = useRestoreDocument(workspaceId!);
 
   const archivedDocuments = archivedDocumentsData?.documents || [];
 
@@ -48,12 +52,58 @@ export const DocumentsPage = () => {
     [documentsData],
   );
 
+  const handleArchiveDocument = async (id: string) => {
+    const doc = activeDocs.find((d) => d.id === id);
+    const docTitle = doc?.title || "Untitled Document";
+    const promise = archiveDoc(id);
+
+    toast.promise(promise, {
+      loading: `Archiving "${docTitle}"...`,
+      success: `"${docTitle}" archived successfully`,
+      error: "Failed to archive document",
+    });
+
+    return promise;
+  };
+
+  const handleRestoreDocument = async (id: string) => {
+    return restoreDoc(id);
+  };
+
+  const handleDeleteDocument = async (ids: string | string[]) => {
+    const isBatch = Array.isArray(ids);
+    const promise = isBatch
+      ? Promise.all(ids.map((id) => deleteDoc(id))).then(() => {})
+      : deleteDoc(ids);
+
+    const getDocTitle = (id: string) => {
+      const doc = activeDocs.find((d) => d.id === id) || archivedDocuments.find((d) => d.id === id);
+      return doc?.title || "Untitled Document";
+    };
+
+    const loadingMsg = isBatch
+      ? `Deleting ${ids.length} documents...`
+      : `Deleting "${getDocTitle(ids as string)}"...`;
+
+    const successMsg = isBatch
+      ? `${ids.length} documents deleted permanently`
+      : `"${getDocTitle(ids as string)}" deleted permanently`;
+
+    toast.promise(promise, {
+      loading: loadingMsg,
+      success: successMsg,
+      error: "Failed to delete document(s)",
+    });
+
+    return promise;
+  };
+
   // Filtered + sorted docs
   const filteredDocs = useMemo(() => {
     let docs = activeDocs;
-    if (searchQuery.trim()) {
+    if (debouncedSearchQuery.trim()) {
       docs = docs.filter((d) =>
-        d.title?.toLowerCase().includes(searchQuery.toLowerCase()),
+        d.title?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()),
       );
     }
     return [...docs].sort((a, b) => {
@@ -67,7 +117,7 @@ export const DocumentsPage = () => {
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
     });
-  }, [activeDocs, searchQuery, sortBy]);
+  }, [activeDocs, debouncedSearchQuery, sortBy]);
 
   const sortLabels: Record<SortKey, string> = {
     updated: "Last edited",
@@ -91,25 +141,26 @@ export const DocumentsPage = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button
+            <Button
+              variant="secondary"
               onClick={() => setIsTrashOpen(true)}
-              className="px-4 py-2.5 bg-surface-secondary border border-white/10 hover:bg-white/5 text-text-secondary hover:text-text-primary font-bold rounded-xl transition-all flex items-center gap-2"
+              icon={<Trash2 className="w-4 h-4" />}
             >
-              <Trash2 className="w-4 h-4" />
               <span className="hidden sm:inline">Trash</span>
               {archivedDocuments && archivedDocuments.length > 0 && (
-                <span className="bg-danger/20 text-danger text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                <span className="bg-danger/20 text-danger text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">
                   {archivedDocuments.length}
                 </span>
               )}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 sm:flex-none px-5 py-2.5 bg-primary-accent hover:bg-[#4CD5C0] text-main-bg font-bold rounded-xl transition-all shadow-[0_0_20px_-5px_rgba(94,234,212,0.3)] hover:shadow-[0_0_25px_-5px_rgba(94,234,212,0.5)] flex items-center justify-center gap-2"
+              icon={<Plus className="w-4 h-4" />}
+              className="flex-1 sm:flex-none"
             >
-              <Plus className="w-4 h-4" />
               New Document
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -129,30 +180,33 @@ export const DocumentsPage = () => {
           <div className="flex items-center gap-2">
             {/* Sort dropdown */}
             <div className="relative">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setShowSortMenu(!showSortMenu)}
-                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-text-secondary bg-surface-secondary border border-white/5 rounded-lg hover:bg-white/5 transition-colors"
+                icon={<ArrowUpDown className="w-3.5 h-3.5" />}
+                className="text-xs"
               >
-                <ArrowUpDown className="w-3.5 h-3.5" />
                 {sortLabels[sortBy]}
-              </button>
+              </Button>
               {showSortMenu && (
-                <div className="absolute right-0 top-full mt-1 w-40 bg-surface-elevated border border-white/10 rounded-xl shadow-2xl py-1 z-50">
+                <div className="absolute right-0 top-full mt-1 w-40 bg-surface-elevated border border-white/10 rounded-xl shadow-2xl py-1 z-50 overflow-hidden">
                   {(Object.keys(sortLabels) as SortKey[]).map((key) => (
-                    <button
+                    <Button
                       key={key}
+                      variant="ghost"
                       onClick={() => {
                         setSortBy(key);
                         setShowSortMenu(false);
                       }}
-                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                      className={`w-full justify-start px-3 py-2 text-xs transition-colors rounded-none border border-transparent ${
                         sortBy === key
-                          ? "text-primary-accent bg-primary-accent/10 font-bold"
+                          ? "text-primary-accent bg-primary-accent/10 font-bold hover:bg-primary-accent/15 hover:text-primary-accent"
                           : "text-text-secondary hover:text-text-primary hover:bg-white/5"
                       }`}
                     >
                       {sortLabels[key]}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
@@ -160,24 +214,28 @@ export const DocumentsPage = () => {
 
             {/* View toggle */}
             <div className="flex bg-surface-secondary border border-white/5 rounded-lg overflow-hidden">
-              <button
+              <Button
+                variant="ghost"
+                iconOnly
+                size="sm"
                 onClick={() => setViewMode("grid")}
-                className={`p-2 transition-colors ${viewMode === "grid" ? "bg-primary-accent/10 text-primary-accent" : "text-text-muted hover:text-text-primary"}`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
+                className={`transition-colors rounded-none border-transparent ${viewMode === "grid" ? "bg-primary-accent/10 text-primary-accent hover:bg-primary-accent/15 hover:text-primary-accent" : "text-text-muted hover:text-text-primary"}`}
+                icon={<LayoutGrid className="w-4 h-4" />}
+              />
+              <Button
+                variant="ghost"
+                iconOnly
+                size="sm"
                 onClick={() => setViewMode("list")}
-                className={`p-2 transition-colors ${viewMode === "list" ? "bg-primary-accent/10 text-primary-accent" : "text-text-muted hover:text-text-primary"}`}
-              >
-                <List className="w-4 h-4" />
-              </button>
+                className={`transition-colors rounded-none border-transparent ${viewMode === "list" ? "bg-primary-accent/10 text-primary-accent hover:bg-primary-accent/15 hover:text-primary-accent" : "text-text-muted hover:text-text-primary"}`}
+                icon={<List className="w-4 h-4" />}
+              />
             </div>
           </div>
         </div>
 
         {/* ── All Documents Label ──────────────────────────────────────── */}
-        {!searchQuery && (
+        {!debouncedSearchQuery && (
           <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-4">
             All Documents
           </h2>
@@ -223,8 +281,8 @@ export const DocumentsPage = () => {
                   key={doc.id}
                   document={doc}
                   workspaceId={workspaceId!}
-                  onArchive={archiveDoc}
-                  onDelete={deleteDoc}
+                  onArchive={handleArchiveDocument}
+                  onDelete={handleDeleteDocument}
                   listMode={viewMode === "list"}
                 />
               ))}
@@ -240,23 +298,25 @@ export const DocumentsPage = () => {
                   of <span className="font-semibold text-text-primary">{documentsData.pagination.total}</span> documents
                 </p>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                     disabled={page === 1}
-                    className="px-3.5 py-2 text-xs font-bold text-text-secondary hover:text-text-primary bg-surface-secondary border border-white/5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/5 transition-all"
+                    size="sm"
                   >
                     Previous
-                  </button>
+                  </Button>
                   <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-secondary border border-white/5 rounded-xl text-xs font-semibold text-text-muted">
                     Page <span className="text-text-primary font-bold">{page}</span> of {documentsData.pagination.totalPages}
                   </div>
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={() => setPage((prev) => Math.min(prev + 1, documentsData.pagination!.totalPages))}
                     disabled={page === documentsData.pagination.totalPages}
-                    className="px-3.5 py-2 text-xs font-bold text-text-secondary hover:text-text-primary bg-surface-secondary border border-white/5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/5 transition-all"
+                    size="sm"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -271,20 +331,20 @@ export const DocumentsPage = () => {
               </div>
             </div>
             <h2 className="text-xl font-bold text-text-primary mb-2">
-              {searchQuery ? "No documents found" : "No documents yet"}
+              {debouncedSearchQuery ? "No documents found" : "No documents yet"}
             </h2>
             <p className="text-text-muted max-w-sm mb-8 text-sm leading-relaxed">
-              {searchQuery
+              {debouncedSearchQuery
                 ? "We couldn't find any documents matching your search. Try different keywords."
                 : "Create your first document to start collaborating with your team."}
             </p>
-            {!searchQuery && (
-              <button
+            {!debouncedSearchQuery && (
+              <Button
+                variant="accent"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="px-6 py-2.5 bg-white/5 hover:bg-primary-accent/10 text-text-primary hover:text-primary-accent font-bold rounded-xl transition-all border border-white/5 hover:border-primary-accent/20"
               >
                 Create your first document
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -299,8 +359,8 @@ export const DocumentsPage = () => {
       {isTrashOpen && (
         <ArchivePanel
           documents={archivedDocuments || []}
-          onRestore={restoreDoc}
-          onDeleteForever={deleteDoc}
+          onRestore={handleRestoreDocument}
+          onDeleteForever={handleDeleteDocument}
           onClose={() => setIsTrashOpen(false)}
         />
       )}

@@ -339,3 +339,28 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
   opacity: 1;
   background-color: var(--color-primary-accent);
 }
+
+/* ─── Inline Attachment Pill Link ────────────────────────────────────────── */
+.ProseMirror a.attachment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  text-decoration: none !important;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--color-primary-accent);
+  transition: all 0.15s ease-in-out;
+  margin: 0 0.15rem;
+  vertical-align: baseline;
+}
+
+.ProseMirror a.attachment-link:hover {
+  background-color: rgba(94, 234, 212, 0.1);
+  border-color: rgba(94, 234, 212, 0.3);
+  color: #4cd5c0;
+}
+

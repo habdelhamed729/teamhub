@@ -96,6 +96,13 @@ export const SlashCommandList = forwardRef<
           </div>
         ))
       )}
+      {props.items.length > 0 && (
+        <div className="px-3 py-2 text-[10px] text-text-muted text-center border-t border-white/5 bg-white/2 select-none">
+          💡 Tip: Press <kbd className="px-1 py-0.5 bg-white/5 border border-white/10 rounded font-mono font-bold text-[9px] text-text-primary">?</kbd> for shortcuts
+        </div>
+      )}
     </div>
   );
 });
+
+SlashCommandList.displayName = "SlashCommandList";

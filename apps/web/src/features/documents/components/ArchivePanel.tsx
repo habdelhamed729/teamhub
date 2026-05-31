@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ArchiveRestore,
   Trash2,
@@ -8,15 +8,17 @@ import {
   Square,
   AlertCircle,
   Clock,
-  Sparkles,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import type { Document } from "@teamhub/shared";
+import { Button } from "@/shared/components/Button";
+import { toast } from "sonner";
 
 interface ArchivePanelProps {
   documents: Document[];
-  onRestore: (id: string) => void;
-  onDeleteForever: (id: string) => void;
+  onRestore: (id: string) => Promise<any>;
+  onDeleteForever: (ids: string | string[]) => Promise<any>;
   onClose: () => void;
 }
 
@@ -28,17 +30,44 @@ export const ArchivePanel = ({
 }: ArchivePanelProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isDeletingBatch, setIsDeletingBatch] = useState(false);
+  const [isDeletingBatch] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [page, setPage] = useState(1);
   const itemsPerPage = 6;
+  const [deleteConfirmInfo, setDeleteConfirmInfo] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => Promise<any> | void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
+  const handleConfirmAction = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteConfirmInfo.onConfirm();
+      setDeleteConfirmInfo((prev) => ({ ...prev, isOpen: false }));
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Filter documents based on search
-  const filteredDocs = useMemo(() => {
+  useEffect(() => {
     setPage(1); // Reset page on search change
+  }, [searchQuery, documents]);
+
+  const filteredDocs = useMemo(() => {
     return documents.filter((doc) =>
       (doc.title || "Untitled")
         .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+        .includes(searchQuery.toLowerCase()),
     );
   }, [documents, searchQuery]);
 
@@ -53,7 +82,7 @@ export const ArchivePanel = ({
   // Toggle selection for a single document
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -67,28 +96,47 @@ export const ArchivePanel = ({
   };
 
   // Batch restore
-  const handleBatchRestore = () => {
+  const handleBatchRestore = async () => {
     if (selectedIds.length === 0) return;
-    selectedIds.forEach((id) => onRestore(id));
-    setSelectedIds([]);
+    const count = selectedIds.length;
+    const promise = Promise.all(selectedIds.map((id) => onRestore(id)));
+
+    toast.promise(promise, {
+      loading: `Restoring ${count} document(s)...`,
+      success: `${count} document(s) restored successfully`,
+      error: "Failed to restore document(s)",
+    });
+
+    try {
+      await promise;
+      setSelectedIds([]);
+    } catch (err) {
+      console.error("Batch restore failed:", err);
+    }
   };
 
-  // Batch delete forever
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) return;
-    
-    const count = selectedIds.length;
-    const confirmMessage =
-      count === 1
-        ? "Are you sure you want to permanently delete this document? This action cannot be undone."
-        : `Are you sure you want to permanently delete these ${count} documents? This action cannot be undone.`;
 
-    if (window.confirm(confirmMessage)) {
-      setIsDeletingBatch(true);
-      selectedIds.forEach((id) => onDeleteForever(id));
-      setSelectedIds([]);
-      setIsDeletingBatch(false);
-    }
+    const count = selectedIds.length;
+    const title =
+      count === 1
+        ? "Permanently Delete Document"
+        : "Permanently Delete Documents";
+    const description =
+      count === 1
+        ? "Are you sure you want to permanently delete this document? This action cannot be undone and will delete all attachments."
+        : `Are you sure you want to permanently delete these ${count} documents? This action cannot be undone and will delete all associated attachments.`;
+
+    setDeleteConfirmInfo({
+      isOpen: true,
+      title,
+      description,
+      onConfirm: async () => {
+        await onDeleteForever(selectedIds);
+        setSelectedIds([]);
+      },
+    });
   };
 
   return (
@@ -101,7 +149,6 @@ export const ArchivePanel = ({
 
       {/* Drawer */}
       <div className="fixed inset-y-0 right-0 w-full sm:w-[460px] bg-surface-secondary/95 backdrop-blur-xl border-l border-white/10 shadow-2xl flex flex-col z-50 animate-in slide-in-from-right duration-300">
-        
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10 bg-surface-elevated/40">
           <div className="flex items-center gap-3">
@@ -111,16 +158,19 @@ export const ArchivePanel = ({
             <div>
               <h2 className="text-lg font-bold text-text-primary">Trash Bin</h2>
               <p className="text-xs text-text-muted">
-                {documents.length} item{documents.length !== 1 ? "s" : ""} archived
+                {documents.length} item{documents.length !== 1 ? "s" : ""}{" "}
+                archived
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            iconOnly
+            size="sm"
             onClick={onClose}
+            icon={<ArrowRight className="w-5 h-5" />}
             className="p-2 text-text-muted hover:text-text-primary hover:bg-white/5 rounded-xl transition-all border border-transparent hover:border-white/10"
-          >
-            <ArrowRight className="w-5 h-5" />
-          </button>
+          />
         </div>
 
         {/* Info Alert */}
@@ -128,7 +178,8 @@ export const ArchivePanel = ({
           <div className="px-6 py-3 bg-danger/5 border-b border-danger/10 flex items-start gap-3">
             <AlertCircle className="w-4 h-4 text-danger/70 mt-0.5 shrink-0" />
             <p className="text-[11px] text-text-muted leading-relaxed">
-              Items in the trash bin are archived. Deleting them forever is permanent.
+              Items in the trash bin are archived. Deleting them forever is
+              permanent.
             </p>
           </div>
         )}
@@ -154,7 +205,8 @@ export const ArchivePanel = ({
                 onClick={toggleSelectAll}
                 className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors font-medium"
               >
-                {selectedIds.length === filteredDocs.length && filteredDocs.length > 0 ? (
+                {selectedIds.length === filteredDocs.length &&
+                filteredDocs.length > 0 ? (
                   <CheckSquare className="w-4 h-4 text-primary-accent" />
                 ) : (
                   <Square className="w-4 h-4 text-text-muted" />
@@ -168,21 +220,23 @@ export const ArchivePanel = ({
 
               {selectedIds.length > 0 && (
                 <div className="flex items-center gap-2 animate-in fade-in duration-200">
-                  <button
+                  <Button
+                    variant="accent"
+                    size="sm"
                     onClick={handleBatchRestore}
-                    className="flex items-center gap-1.5 py-1 px-2.5 bg-primary-accent/10 border border-primary-accent/20 hover:bg-primary-accent hover:text-main-bg text-primary-accent text-xs font-bold rounded-md transition-all"
+                    icon={<ArchiveRestore className="w-3.5 h-3.5" />}
                   >
-                    <ArchiveRestore className="w-3.5 h-3.5" />
                     Restore
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
                     onClick={handleBatchDelete}
                     disabled={isDeletingBatch}
-                    className="flex items-center gap-1.5 py-1 px-2.5 bg-danger/10 border border-danger/20 hover:bg-danger hover:text-white text-danger text-xs font-bold rounded-md transition-all"
+                    icon={<Trash2 className="w-3.5 h-3.5" />}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
                     Delete
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -257,30 +311,42 @@ export const ArchivePanel = ({
                         className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <button
-                          onClick={() => onRestore(doc.id)}
+                        <Button
+                          variant="ghost"
+                          iconOnly
+                          size="sm"
+                          onClick={() => {
+                            const promise = Promise.resolve(onRestore(doc.id));
+                            toast.promise(promise, {
+                              loading: `Restoring "${doc.title || "Untitled"}"...`,
+                              success: `"${doc.title || "Untitled"}" restored successfully`,
+                              error: "Failed to restore document",
+                            });
+                          }}
                           className="p-2 bg-white/5 hover:bg-primary-accent hover:text-main-bg text-text-secondary rounded-lg transition-all"
                           title="Restore document"
-                        >
-                          <ArchiveRestore className="w-3.5 h-3.5" />
-                        </button>
-                        <button
+                          icon={<ArchiveRestore className="w-3.5 h-3.5" />}
+                        />
+                        <Button
+                          variant="danger"
+                          iconOnly
+                          size="sm"
                           onClick={() => {
-                            if (
-                              window.confirm(
-                                `Are you sure you want to permanently delete "${
-                                  doc.title || "Untitled"
-                                }"? This action cannot be undone.`
-                              )
-                            ) {
-                              onDeleteForever(doc.id);
-                            }
+                            setDeleteConfirmInfo({
+                              isOpen: true,
+                              title: "Permanently Delete Document",
+                              description: `Are you sure you want to permanently delete "${
+                                doc.title || "Untitled"
+                              }"? This action cannot be undone and will delete all attachments.`,
+                              onConfirm: async () => {
+                                await onDeleteForever(doc.id);
+                              },
+                            });
                           }}
-                          className="p-2 bg-white/5 hover:bg-danger hover:text-white text-text-muted rounded-lg transition-all"
+                          className="p-2 bg-white/5 hover:bg-danger hover:text-white text-text-muted rounded-lg transition-all border border-transparent"
                           title="Delete forever"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          icon={<Trash2 className="w-3.5 h-3.5" />}
+                        />
                       </div>
                     </div>
                   );
@@ -294,26 +360,30 @@ export const ArchivePanel = ({
                     Page {page} of {totalPages}
                   </span>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPage((p) => Math.max(p - 1, 1));
                       }}
                       disabled={page === 1}
-                      className="px-3 py-1.5 text-[11px] font-bold text-text-secondary hover:text-text-primary bg-white/5 border border-white/5 hover:bg-white/10 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      className="text-[11px] font-bold py-1 px-3"
                     >
                       Prev
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPage((p) => Math.min(p + 1, totalPages));
                       }}
                       disabled={page === totalPages}
-                      className="px-3 py-1.5 text-[11px] font-bold text-text-secondary hover:text-text-primary bg-white/5 border border-white/5 hover:bg-white/10 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      className="text-[11px] font-bold py-1 px-3"
                     >
                       Next
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -321,6 +391,21 @@ export const ArchivePanel = ({
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={deleteConfirmInfo.isOpen}
+        onClose={() =>
+          !isDeleting &&
+          setDeleteConfirmInfo((prev) => ({ ...prev, isOpen: false }))
+        }
+        onConfirm={handleConfirmAction}
+        title={deleteConfirmInfo.title}
+        description={deleteConfirmInfo.description}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDanger={true}
+        isLoading={isDeleting}
+      />
     </>
   );
 };

@@ -7,7 +7,7 @@ export const uploadAttachmentSchema = z.object({
   target_id: z.string().uuid(),
 });
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export const ALLOWED_FILE_TYPES = [
   // Images
@@ -16,6 +16,11 @@ export const ALLOWED_FILE_TYPES = [
   'image/gif',
   'image/webp',
   'image/svg+xml',
+  // Videos
+  'video/mp4',
+  'video/mpeg',
+  'video/quicktime',
+  'video/webm',
   // Documents
   'application/pdf',
   'application/msword',

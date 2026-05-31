@@ -1,3 +1,5 @@
+import type { Attachment } from "../attachment/attachment.types";
+
 export interface Document {
   id: string;
   workspace_id: string;
@@ -14,4 +16,5 @@ export interface Document {
   last_editor?: { id: string; display_name: string; avatar_url?: string | null } | null;
   icon?: string | null;
   cover_url?: string | null;
+  attachments?: Attachment[];
 }
