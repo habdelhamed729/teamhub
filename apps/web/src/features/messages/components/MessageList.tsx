@@ -1,16 +1,24 @@
 import React, { useRef, useEffect } from 'react';
-import { useMessages } from '../hooks/useMessages';
+import { useMessages, useDeleteMessage } from '../hooks/useMessages';
+import { useAddReaction, useRemoveReaction } from '../hooks/useReactions';
 import { MessageItem } from './MessageItem';
+import type { Message } from '@teamhub/shared';
+import { toast } from 'sonner';
 
-interface Props {
+interface MessageListProps {
   channelId: string;
+  onReply: (message: Message) => void;
+  channelType?: string;
 }
 
-export const MessageList: React.FC<Props> = ({ channelId }) => {
+export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, channelType }) => {
   const { data, isLoading } = useMessages(channelId);
+  const deleteMessage = useDeleteMessage(channelId);
+  const addReaction = useAddReaction(channelId);
+  const removeReaction = useRemoveReaction(channelId);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const allMessages = data?.pages.flatMap(page => page.messages) || [];
+  const allMessages = data?.pages.flatMap((page) => page.messages) || [];
 
   useEffect(() => {
     // Scroll to bottom when messages arrive. Because of flex-col-reverse,
@@ -20,6 +28,25 @@ export const MessageList: React.FC<Props> = ({ channelId }) => {
     }
   }, [allMessages.length]);
 
+  const handleDelete = (messageId: string) => {
+    deleteMessage.mutate(messageId, {
+      onSuccess: () => toast.success('Message deleted'),
+      onError: (err) => toast.error(err.message || 'Failed to delete message'),
+    });
+  };
+
+  const handleReact = (messageId: string, emoji: string) => {
+    const msg = allMessages.find((m) => m.id === messageId);
+    if (!msg) return;
+
+    const existingReaction = msg.reactions?.find((r) => r.emoji === emoji);
+    if (existingReaction?.reacted) {
+      removeReaction.mutate({ messageId, emoji });
+    } else {
+      addReaction.mutate({ messageId, emoji });
+    }
+  };
+
   if (isLoading) {
     return <div className="flex-1 p-6 flex items-center justify-center text-text-muted">Loading messages...</div>;
   }
@@ -27,7 +54,7 @@ export const MessageList: React.FC<Props> = ({ channelId }) => {
   if (allMessages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="text-center text-text-muted my-10">
+        <div className="text-center text-text-muted my-10 animate-in fade-in duration-200">
           <h3 className="text-lg font-medium text-text-primary mb-2">No messages yet</h3>
           <p className="text-sm">Be the first to say hello!</p>
         </div>
@@ -36,11 +63,26 @@ export const MessageList: React.FC<Props> = ({ channelId }) => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse gap-2 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 flex flex-col-reverse gap-2 bg-fixed">
       <div ref={bottomRef} />
-      {allMessages.map((msg) => (
-        <MessageItem key={msg.id} message={msg} />
-      ))}
+      {allMessages.map((msg) => {
+        // Resolve parent message object if this message is a reply
+        const parentMessage = msg.parentMessageId
+          ? allMessages.find((m) => m.id === msg.parentMessageId)
+          : null;
+
+        return (
+          <MessageItem
+            key={msg.id}
+            message={msg}
+            parentMessage={parentMessage}
+            onReply={onReply}
+            onReact={handleReact}
+            onDelete={handleDelete}
+            channelType={channelType}
+          />
+        );
+      })}
     </div>
   );
 };

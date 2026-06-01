@@ -134,10 +134,13 @@ export const useMessageSocket = (channelId: string) => {
 
               if (reactionIndex > -1) {
                 const r = updatedReactions[reactionIndex]!;
+                const isOwnReactionEvent = currentUserId === event.userId;
+                const shouldIncrement = !isOwnReactionEvent || !r.reacted;
+
                 updatedReactions[reactionIndex] = {
                   ...r,
-                  count: r.count + 1,
-                  reacted: r.reacted || currentUserId === event.userId,
+                  count: shouldIncrement ? r.count + 1 : r.count,
+                  reacted: r.reacted || isOwnReactionEvent,
                 };
               } else {
                 updatedReactions.push({
@@ -170,15 +173,19 @@ export const useMessageSocket = (channelId: string) => {
 
               let updatedReactions = [...m.reactions];
               const r = updatedReactions[reactionIndex]!;
+              const isOwnReactionEvent = currentUserId === event.userId;
+              const shouldDecrement = !isOwnReactionEvent || r.reacted;
 
-              if (r.count <= 1) {
-                updatedReactions = updatedReactions.filter((reaction) => reaction.emoji !== event.emoji);
-              } else {
-                updatedReactions[reactionIndex] = {
-                  ...r,
-                  count: r.count - 1,
-                  reacted: currentUserId === event.userId ? false : r.reacted,
-                };
+              if (shouldDecrement) {
+                if (r.count <= 1) {
+                  updatedReactions = updatedReactions.filter((reaction) => reaction.emoji !== event.emoji);
+                } else {
+                  updatedReactions[reactionIndex] = {
+                    ...r,
+                    count: r.count - 1,
+                    reacted: isOwnReactionEvent ? false : r.reacted,
+                  };
+                }
               }
 
               return { ...m, reactions: updatedReactions };
