@@ -1,4 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
 @import "tailwindcss";
+
 
 @theme {
   /* Colors */
@@ -6,7 +8,17 @@
   --color-main-bg: #1A1D21;
   --color-surface-secondary: #22262C;
   --color-surface-elevated: #2A2F36;
-    --color-ai-accent: #7C3AED;
+  --color-ai-accent: #7C3AED;
+  
+  /* Figma Messaging Colors */
+  --color-msg-own-bg: #45A193;
+  --color-msg-other-bg: #FCFDFD;
+  --color-reply-own-bg: #1D443E;
+  --color-reply-own-border: #276259;
+  --color-reply-other-bg: #E8E8E9;
+  --color-reply-other-border: #66686A;
+  --color-context-menu-bg: #121517;
+  --color-reaction-bar-bg: #0B0C0E;
 
   /* Text Colors */
   --color-text-primary: #F8FAFC;

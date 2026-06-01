@@ -9,8 +9,8 @@ import { TypingIndicatorDisplay } from '@/features/messages/components/TypingInd
 import { useMessageSocket } from '@/features/messages/hooks/useMessageSocket';
 import { Button } from '@/shared/components/Button';
 import { toast } from 'sonner';
-import { MessageSquare, Users, Hash, Send } from 'lucide-react';
-import type {WorkspaceMember} from '@teamhub/shared';
+import { MessageSquare, Users, Hash } from 'lucide-react';
+import type { WorkspaceMember, Message } from '@teamhub/shared';
 
 export const ChannelPage: React.FC = () => {
   const { workspaceId, channelId } = useParams() as { workspaceId: string; channelId: string };
@@ -26,6 +26,7 @@ export const ChannelPage: React.FC = () => {
   const [debounced, setDebounced] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   // Bind real-time socket events for this channel
   useMessageSocket(channelId!);
@@ -81,30 +82,38 @@ export const ChannelPage: React.FC = () => {
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
          {/* Header */}
-         <div className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-surface-elevated shrink-0">
+         <div className="h-[83px] border-b border-white/5 flex items-center justify-between px-6 bg-[#2A2F36] shrink-0">
            <div className="flex items-center gap-3">
-             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-accent/10 text-primary-accent">
+             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-accent text-slate-950 font-bold shadow-md">
                {channel?.type === 'dm' ? <MessageSquare className="h-5 w-5" /> : <Hash className="h-5 w-5" />}
              </div>
              <div>
-               <h2 className="font-semibold text-lg text-text-primary">{channel?.name}</h2>
-               {channel?.type !== 'dm' && <p className="text-xs text-text-muted">{members?.length || 0} members</p>}
+               <h2 className="font-semibold text-lg text-white font-[Roboto] leading-snug">{channel?.name}</h2>
+               {channel?.type !== 'dm' && <p className="text-xs text-white/60 font-[Roboto]">{members?.length || 0} members</p>}
              </div>
            </div>
            {channel?.type !== 'dm' && (
-             <Button variant="ghost" onClick={() => setShowMembers(!showMembers)} className={showMembers ? 'bg-white/10' : ''}>
+             <Button
+               variant="ghost"
+               onClick={() => setShowMembers(!showMembers)}
+               className={`text-white/70 hover:text-white hover:bg-white/5 p-2 rounded-xl transition-colors ${showMembers ? 'bg-white/10 text-white' : ''}`}
+             >
                <Users className="h-5 w-5" />
              </Button>
            )}
          </div>
          
          {/* Message List area */}
-         <MessageList channelId={channelId!} />
+         <MessageList channelId={channelId!} onReply={setReplyingTo} channelType={channel?.type} />
 
          {/* Composer area */}
          <div className="p-4 bg-surface-elevated shrink-0 relative">
            <TypingIndicatorDisplay channelId={channelId!} />
-           <MessageComposer channelId={channelId!} />
+           <MessageComposer
+             channelId={channelId!}
+             replyingTo={replyingTo}
+             onCancelReply={() => setReplyingTo(null)}
+           />
          </div>
       </div>
 
@@ -173,7 +182,6 @@ export const ChannelPage: React.FC = () => {
                         onClick={() => handleStartDM(m.user.id, m.user.display_name || m.user.email || 'User')}
                         disabled={createChannel.isPending}
                         className="text-text-muted hover:text-primary-accent opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Send Message"
                       >
                         <MessageSquare className="h-4 w-4" />
                       </Button>
