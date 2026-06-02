@@ -1,3 +1,5 @@
+import re
+
 def parse_tiptap_node(node: dict) -> str:
     """
     Recursively convert a TipTap JSON node to plain text.
@@ -144,7 +146,7 @@ def extract_sections(content: dict | None) -> list[dict]:
         
         # Split at H1 or H2 headings
         if child_type == "heading" and child.get("attrs", {}).get("level", 1) in (1, 2):
-            section_text = "\n".join(current_text_parts).strip()
+            section_text = clean_text("\n".join(current_text_parts))
             if section_text or current_title != "Introduction":
                 sections.append({
                     "title": current_title,
@@ -160,7 +162,7 @@ def extract_sections(content: dict | None) -> list[dict]:
                 current_text_parts.append(node_text)
                 
     # Append the last section
-    section_text = "\n".join(current_text_parts).strip()
+    section_text = clean_text("\n".join(current_text_parts))
     if section_text or current_title != "Introduction":
         sections.append({
             "title": current_title,
@@ -202,3 +204,23 @@ def extract_attachment_links(content: dict | None) -> list[dict]:
         links.extend(extract_attachment_links(child))
         
     return links
+
+def clean_text(text: str) -> str:
+    """Clean and preprocess text for optimal embedding quality."""
+    if not text:
+        return ""
+        
+    # 1. Remove null bytes (PostgreSQL does not support them in TEXT columns)
+    text = text.replace("\x00", "")
+    
+    # 2. Remove horizontal rule lines (e.g., '---' on a single line)
+    text = re.sub(r"^\s*---\s*$", "", text, flags=re.MULTILINE)
+    
+    # 3. Trim trailing whitespace from each line
+    lines = [line.rstrip() for line in text.split("\n")]
+    text = "\n".join(lines)
+    
+    # 4. Collapse three or more consecutive newlines down to double newlines
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    
+    return text.strip()
