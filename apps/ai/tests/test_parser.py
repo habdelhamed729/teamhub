@@ -14,23 +14,22 @@ def test_tiptap_parser():
     # Assert plain text properties
     assert "What is Semantic Search?" in text
     assert "exact keywords" in text
-    assert "[Attachment: rdoc_specification.pdf]" in text
-    assert "PGVector + SentenceTransformers" in text
+    assert "[Attachment: dart.pdf]" in text
+    assert "Matches keywords" in text
     
-    # Assert sections splitting (should have 4 sections: Introduction/H1, Attached Specifications, Full Flow, Feature Comparison Table)
+    # Assert sections splitting (should have 24 sections based on H1/H2)
     sections = extract_sections(content)
-    assert len(sections) == 4
+    assert len(sections) == 24
     assert sections[0]["title"] == "What is Semantic Search?"
-    assert sections[1]["title"] == "Attached Specifications"
-    assert sections[2]["title"] == "Full Flow"
-    assert "PGVector" in sections[2]["text"]
-    assert sections[3]["title"] == "Feature Comparison Table"
+    assert sections[1]["title"] == "Simple Definition"
+    assert sections[2]["title"] == "Traditional Search vs Semantic Search"
+    assert "Matches keywords" in sections[2]["text"]
     
     # Assert attachment links
     links = extract_attachment_links(content)
     assert len(links) == 1
-    assert links[0]["filename"] == "rdoc_specification.pdf"
-    assert links[0]["url"] == "https://res.cloudinary.com/dnrzcqzdi/raw/upload/v172601/rdoc_specification.pdf"
+    assert links[0]["filename"] == "dart.pdf"
+    assert links[0]["url"] == "https://res.cloudinary.com/dnrzcqzdi/raw/upload/v1780081730/teamhub/attachments/1780081732563-dart.pdf"
 
 if __name__ == "__main__":
     import sys
