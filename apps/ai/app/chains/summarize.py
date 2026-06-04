@@ -1,6 +1,7 @@
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from app.config import settings
+from app.prompts.loader import load_prompt
 
 async def summarize_document(document_text: str, max_length: str = "medium") -> str:
     """
@@ -22,16 +23,11 @@ async def summarize_document(document_text: str, max_length: str = "medium") -> 
     
     guideline = length_guidelines.get(max_length.lower(), length_guidelines["medium"])
 
+    # Load system prompt and format guideline parameter
+    system_prompt = load_prompt("summarize_v1.txt").format(guideline=guideline)
+
     prompt = ChatPromptTemplate.from_messages([
-        ("system", (
-            "You are a professional document summarizer for a team collaboration workspace called TeamHub.\n"
-            "Your goal is to extract the core ideas, decisions, and important details from the document text.\n"
-            "Follow these constraints:\n"
-            f"- {guideline}\n"
-            "- Be direct and professional. Avoid meta-commentary like 'In this document...' or 'This text discusses...'.\n"
-            "- Use markdown formatting (bolding, bullet points, headers) for readability.\n"
-            "- Ground all summaries strictly in the text provided. Do not extrapolate."
-        )),
+        ("system", system_prompt),
         ("human", "Summarize the following content:\n\n{text}")
     ])
 

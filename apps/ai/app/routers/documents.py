@@ -9,6 +9,7 @@ from app.utils.auth import verify_service_token
 from app.embeddings.parsers import parse_tiptap_document
 from app.chains.tagging import generate_tags, generate_title
 from app.chains.summarize import summarize_document
+from app.chains.qa import document_qa
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -23,6 +24,19 @@ class SummarizeRequest(BaseModel):
 
 class SummarizeResponse(BaseModel):
     summary: str
+
+class QARequest(BaseModel):
+    question: str
+
+class QASourceItem(BaseModel):
+    chunk_text: str
+    similarity: float
+    section_title: str | None
+
+class QAResponse(BaseModel):
+    answer: str
+    sources: list[QASourceItem]
+    model: str
 
 async def _get_document_text(document_id: str, workspace_id: str, db: AsyncSession) -> str:
     """Helper to fetch document TipTap content, verify workspace, and parse to plain text."""
@@ -144,3 +158,41 @@ async def generate_document_summary(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating summary: {str(e)}"
         )
+
+@router.post(
+    "/{document_id}/qa",
+    response_model=QAResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Ask a question about a specific document (RAG)"
+)
+async def generate_document_qa(
+    document_id: str,
+    request: QARequest,
+    context: dict = Depends(verify_service_token),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    RAG pipeline:
+    1. Embed query
+    2. Fetch top 5 vector matches from this document only
+    3. Construct prompt context
+    4. Generate grounded LLM response via Groq
+    """
+    workspace_id = context["workspace_id"]
+    
+    try:
+        qa_result = await document_qa(
+            question=request.question,
+            document_id=document_id,
+            workspace_id=workspace_id,
+            db=db
+        )
+        return qa_result
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error performing document QA: {str(e)}"
+        )
+
