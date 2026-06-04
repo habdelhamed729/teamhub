@@ -10,6 +10,7 @@ from app.embeddings.parsers import parse_tiptap_document
 from app.chains.tagging import generate_tags, generate_title
 from app.chains.summarize import summarize_document
 from app.chains.qa import document_qa
+from app.chains.extraction import extract_action_items
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -24,6 +25,15 @@ class SummarizeRequest(BaseModel):
 
 class SummarizeResponse(BaseModel):
     summary: str
+
+class ActionItemResponseItem(BaseModel):
+    action: str
+    assignee: str | None = None
+    priority: str
+    due_date: str | None = None
+
+class ActionItemsResponse(BaseModel):
+    items: list[ActionItemResponseItem]
 
 class QARequest(BaseModel):
     question: str
@@ -195,4 +205,33 @@ async def generate_document_qa(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error performing document QA: {str(e)}"
         )
+
+@router.post(
+    "/{document_id}/extract-actions",
+    response_model=ActionItemsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Extract structured action items from a document"
+)
+async def extract_document_action_items(
+    document_id: str,
+    context: dict = Depends(verify_service_token),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Fetch the document content, verify workspace ownership, and extract structured action items / tasks using Groq LLM.
+    """
+    workspace_id = context["workspace_id"]
+    document_text = await _get_document_text(document_id, workspace_id, db)
+    
+    try:
+        items = await extract_action_items(document_text)
+        return {"items": items}
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error extracting action items: {str(e)}"
+        )
+
 
