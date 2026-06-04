@@ -19,6 +19,7 @@ import { DocumentIconPicker } from "../components/DocumentIconPicker";
 import { DocumentHeaderBar } from "../components/DocumentHeaderBar";
 import type { JSONContent, Editor } from "@tiptap/react";
 import { AISidebar } from "../../ai/components/AISidebar";
+import { downloadMarkdown, downloadPDF } from "../utils/exportUtils";
 import "../styles/editor.css";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
@@ -274,10 +275,18 @@ export const DocumentEditorPage = () => {
         onDeleteClick={() => setIsDeleteModalOpen(true)}
         isAISidebarOpen={isAISidebarOpen}
         onToggleAI={() => setIsAISidebarOpen(!isAISidebarOpen)}
+        onExportMarkdown={() => {
+          if (editorRef) {
+            downloadMarkdown(title, editorRef.getJSON());
+          }
+        }}
+        onExportPDF={() => {
+          downloadPDF("document-print-area", title);
+        }}
       />
 
       {/* Editor Area */}
-      <div className="flex-1 overflow-y-auto relative">
+      <div className="flex-1 overflow-y-auto relative" id="document-print-area">
         {/* Cover Image Banner */}
         <DocumentCoverSection
           coverUrl={coverUrl}
@@ -294,7 +303,7 @@ export const DocumentEditorPage = () => {
             />
           ) : (
             /* Hover Action Triggers when icon/cover is missing */
-            <div className="flex gap-3 mb-6 opacity-20 group-hover/header:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+            <div className="flex gap-3 mb-6 opacity-20 group-hover/header:opacity-100 focus-within:opacity-100 transition-opacity duration-200 no-pdf">
               <Button
                 variant="ghost"
                 size="sm"
@@ -376,13 +385,15 @@ export const DocumentEditorPage = () => {
           />
 
           {/* Attachments Section */}
-          <AttachmentManager
-            target="document"
-            targetId={documentId!}
-            attachments={document.attachments || []}
-            currentUserId={currentUser?.id}
-            queryKeysToInvalidate={[["document", documentId]]}
-          />
+          <div className="no-pdf">
+            <AttachmentManager
+              target="document"
+              targetId={documentId!}
+              attachments={document.attachments || []}
+              currentUserId={currentUser?.id}
+              queryKeysToInvalidate={[["document", documentId]]}
+            />
+          </div>
         </div>
       </div>
 

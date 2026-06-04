@@ -364,3 +364,15 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
   color: #4cd5c0;
 }
 
+/* Hide interactive UI elements only during PDF export (parent gets .exporting-pdf class) */
+@media print {
+  .no-pdf {
+    display: none !important;
+  }
+}
+.exporting-pdf .no-pdf {
+  display: none !important;
+}
+.html2pdf__page-break {
+  page-break-inside: avoid;
+}
