@@ -1,0 +1,39 @@
+[project]
+name = "teamhub-ai"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+dependencies = [
+    # Core
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic-settings>=2.7.0",
+    
+    # Database
+    "sqlalchemy[asyncio]>=2.0.0",
+    "asyncpg>=0.30.0",
+    "pgvector>=0.3.0",
+    "alembic>=1.15.0",
+    
+    # AI / ML
+    "langchain>=0.3.0",
+    "langchain-groq>=0.2.0",
+    "langchain-community>=0.3.0",
+    "sentence-transformers>=3.3.0",
+    
+    # Document / Attachment Parsing
+    "pypdf>=5.0.0",
+    "python-docx>=1.1.0",
+    
+    # Utilities
+    "httpx>=0.28.0",
+    "python-dotenv>=1.0.0",
+    "sse-starlette>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.25.0",
+    "ruff>=0.8.0",
+]

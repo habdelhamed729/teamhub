@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWorkspaceStore } from '@/app/store/useWorkspaceStore';
 import { useQuery } from '@tanstack/react-query';
 import { listWorkspaces } from '@/features/workspace/api/workspace.api';
@@ -6,6 +6,7 @@ import { listChannels } from '@/features/channels/api/channels.api';
 import { useDocuments } from '@/features/documents/hooks/useDocuments';
 import { DocumentsSidebar } from '@/features/documents/components/DocumentsSidebar';
 import { CreateDocumentDialog } from '@/features/documents/components/CreateDocumentDialog';
+import { AISearchModal } from '@/features/ai/components/AISearchModal';
 import {
   Hash,
   MessageSquare,
@@ -14,7 +15,9 @@ import {
   Settings as SettingsIcon,
   Plus,
   ChevronDown,
-  Check
+  Check,
+  Search,
+  Sparkles,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import type {Channel} from '@teamhub/shared';
@@ -29,6 +32,19 @@ export const Sidebar = () => {
   const [isDocumentsOpen, setIsDocumentsOpen] = useState(false);
   const [isCreateDocOpen, setIsCreateDocOpen] = useState(false);
   const [createDocParentId, setCreateDocParentId] = useState<string | undefined>();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Global Ctrl+K / Cmd+K search listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const { data: workspaces } = useQuery({
     queryKey: ['workspaces'],
@@ -118,6 +134,24 @@ export const Sidebar = () => {
           </div>
         )}
       </div>
+
+      {/* AI Semantic Search Trigger Button */}
+      {activeWorkspace && (
+        <div className="px-4 pb-2 shrink-0">
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="w-full flex items-center justify-between px-3 py-2 bg-surface-elevated hover:bg-white/5 border border-white/5 rounded-xl text-xs text-text-muted hover:text-text-secondary transition-all cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5 text-text-muted" />
+              <span>Search with AI...</span>
+            </div>
+            <kbd className="font-mono font-bold text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-text-muted shrink-0 select-none">
+              {typeof window !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
+            </kbd>
+          </button>
+        </div>
+      )}
 
       {/* Main Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-8">
@@ -278,6 +312,14 @@ export const Sidebar = () => {
           isOpen={isCreateDocOpen}
           onClose={() => setIsCreateDocOpen(false)}
           parentId={createDocParentId}
+        />
+      )}
+
+      {activeWorkspace && (
+        <AISearchModal
+          workspaceId={activeWorkspace.id}
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
         />
       )}
     </aside>

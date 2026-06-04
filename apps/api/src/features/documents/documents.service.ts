@@ -270,11 +270,33 @@ export const updateDocument = async (
     data.cover_url = dto.cover_url;
   }
 
-  return prisma.document.update({
+  const updatedDoc = await prisma.document.update({
     where: { id: documentId },
     data,
     include: documentIncludeWithAttachments,
   });
+
+  // If title or content changed, queue an embedding job
+  if (dto.title !== undefined || dto.content !== undefined) {
+    try {
+      const existingJobs = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT id FROM "ai"."ai_jobs" WHERE "source_id" = $1::uuid AND "status" = 'pending'`,
+        documentId
+      );
+      if (existingJobs.length === 0) {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO "ai"."ai_jobs" ("id", "workspace_id", "job_type", "source_type", "source_id", "status", "attempts", "max_attempts", "payload", "created_at")
+           VALUES (gen_random_uuid(), $1::uuid, 'embed_document', 'document', $2::uuid, 'pending', 0, 3, '{}'::jsonb, NOW())`,
+          updatedDoc.workspace_id,
+          documentId
+        );
+      }
+    } catch (err) {
+      console.error("[AI Job Queue] Failed to queue embedding job:", err);
+    }
+  }
+
+  return updatedDoc;
 };
 
 // ─── archive (soft delete) ──────────────────────────────────────────────────

@@ -92,7 +92,7 @@ export const DocumentCoverSection = ({
   return (
     <div className="relative group/cover h-48 w-full shrink-0">
       <div className={`w-full h-full ${coverUrl}`} />
-      <div className="absolute right-8 bottom-4 opacity-0 group-hover/cover:opacity-100 focus-within:opacity-100 transition-opacity flex gap-2">
+      <div className="absolute right-8 bottom-4 opacity-0 group-hover/cover:opacity-100 focus-within:opacity-100 transition-opacity flex gap-2 no-pdf">
         <Button
           ref={triggerRef}
           variant="ghost"

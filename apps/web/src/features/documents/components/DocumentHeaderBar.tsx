@@ -15,6 +15,8 @@ import {
   ImagePlus,
   Paperclip,
   Keyboard,
+  Sparkles,
+  Download,
 } from "lucide-react";
 import { Button } from "@/shared/components/Button";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
@@ -27,11 +29,15 @@ interface DocumentHeaderBarProps {
   saveStatus: "saved" | "saving" | "unsaved" | "error";
   isUploading: boolean;
   isUploadingAttachment: boolean;
-  onImageUpload: (file: File) => Promise<void>;
-  onAttachmentUpload: (file: File) => Promise<void>;
+  onImageUpload: (file: File) => Promise<any>;
+  onAttachmentUpload: (file: File) => Promise<any>;
   onShowShortcuts: () => void;
-  onArchive: () => Promise<void>;
+  onArchive: () => Promise<any>;
   onDeleteClick: () => void;
+  isAISidebarOpen: boolean;
+  onToggleAI: () => void;
+  onExportMarkdown: () => void;
+  onExportPDF: () => void;
 }
 
 export const DocumentHeaderBar = ({
@@ -46,6 +52,10 @@ export const DocumentHeaderBar = ({
   onShowShortcuts,
   onArchive,
   onDeleteClick,
+  isAISidebarOpen,
+  onToggleAI,
+  onExportMarkdown,
+  onExportPDF,
 }: DocumentHeaderBarProps) => {
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -77,7 +87,7 @@ export const DocumentHeaderBar = ({
   };
 
   return (
-    <header className="flex items-center justify-between px-6 py-2.5 border-b border-white/5 bg-surface-secondary/50 backdrop-blur-xl shrink-0">
+    <header className="flex items-center justify-between px-6 py-2.5 border-b border-white/5 bg-surface-secondary/50 backdrop-blur-xl shrink-0 relative z-30">
       <div className="flex items-center gap-3 min-w-0">
         {/* Back Button */}
         <Link
@@ -166,6 +176,18 @@ export const DocumentHeaderBar = ({
           onChange={handleAttachmentFileChange}
         />
 
+        {/* Toggle AI Sidebar */}
+        <Button
+          variant={isAISidebarOpen ? "accent" : "ghost"}
+          size="sm"
+          onClick={onToggleAI}
+          className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/5 border border-transparent rounded-lg transition-colors flex items-center gap-1.5 px-2.5"
+          title="Toggle AI Assistant"
+          icon={<Sparkles className="w-4.5 h-4.5 text-primary-accent" />}
+        >
+          <span className="text-xs font-bold hidden sm:inline">Ask AI</span>
+        </Button>
+
         {/* Save Status */}
         <div className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-lg bg-white/5">
           {saveStatus === "saving" && (
@@ -215,44 +237,72 @@ export const DocumentHeaderBar = ({
             iconOnly
             size="sm"
             onClick={() => setShowOptions(!showOptions)}
-            className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/5 border border-transparent rounded-lg transition-colors"
+            className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/10 border border-transparent rounded-lg transition-colors"
             icon={<MoreHorizontal className="w-5 h-5" />}
           />
 
           {showOptions && (
-            <div className="popover-panel absolute right-0 top-full mt-2 w-52 py-1 overflow-hidden">
+            <div className="popover-panel absolute right-0 top-full mt-2 w-64 p-1.5 space-y-0.5 flex flex-col z-50 animate-in fade-in duration-150">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   setShowOptions(false);
                   toast.success("Link copied to clipboard");
                 }}
-                className="w-full justify-start gap-3 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 border border-transparent rounded-none transition-colors"
-                icon={<LinkIcon className="w-4 h-4" />}
+                className="w-full justify-start gap-3 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/8 rounded-md transition-all border border-transparent font-medium"
+                icon={<LinkIcon className="w-4 h-4 text-text-muted" />}
               >
                 Copy link
               </Button>
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={async () => {
                   setShowOptions(false);
                   await onArchive();
                 }}
-                className="w-full justify-start gap-3 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 border border-transparent rounded-none transition-colors"
-                icon={<Archive className="w-4 h-4" />}
+                className="w-full justify-start gap-3 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/8 rounded-md transition-all border border-transparent font-medium"
+                icon={<Archive className="w-4 h-4 text-text-muted" />}
               >
                 Archive
               </Button>
               <div className="h-px bg-white/5 my-1" />
               <Button
                 variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowOptions(false);
+                  onExportPDF();
+                }}
+                className="w-full justify-start gap-3 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/8 rounded-md transition-all border border-transparent font-medium"
+                icon={<Download className="w-4 h-4 text-primary-accent" />}
+              >
+                Export as PDF (.pdf)
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowOptions(false);
+                  onExportMarkdown();
+                }}
+                className="w-full justify-start gap-3 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/8 rounded-md transition-all border border-transparent font-medium"
+                icon={<FileText className="w-4 h-4 text-primary-accent" />}
+              >
+                Export as Markdown (.md)
+              </Button>
+              <div className="h-px bg-white/5 my-1" />
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setShowOptions(false);
                   onDeleteClick();
                 }}
-                className="w-full justify-start gap-3 px-3 py-2 text-sm text-danger hover:bg-danger/10 hover:text-danger border border-transparent rounded-none transition-colors font-medium"
-                icon={<Trash2 className="w-4 h-4" />}
+                className="w-full justify-start gap-3 px-3 py-2 text-sm text-danger hover:bg-danger/10 hover:text-danger rounded-md transition-all border border-transparent font-medium"
+                icon={<Trash2 className="w-4 h-4 text-danger/80" />}
               >
                 Delete
               </Button>
