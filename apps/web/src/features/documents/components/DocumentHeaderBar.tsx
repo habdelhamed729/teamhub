@@ -15,6 +15,7 @@ import {
   ImagePlus,
   Paperclip,
   Keyboard,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/shared/components/Button";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
@@ -32,6 +33,8 @@ interface DocumentHeaderBarProps {
   onShowShortcuts: () => void;
   onArchive: () => Promise<void>;
   onDeleteClick: () => void;
+  isAISidebarOpen: boolean;
+  onToggleAI: () => void;
 }
 
 export const DocumentHeaderBar = ({
@@ -46,6 +49,8 @@ export const DocumentHeaderBar = ({
   onShowShortcuts,
   onArchive,
   onDeleteClick,
+  isAISidebarOpen,
+  onToggleAI,
 }: DocumentHeaderBarProps) => {
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -165,6 +170,18 @@ export const DocumentHeaderBar = ({
           className="hidden"
           onChange={handleAttachmentFileChange}
         />
+
+        {/* Toggle AI Sidebar */}
+        <Button
+          variant={isAISidebarOpen ? "accent" : "ghost"}
+          size="sm"
+          onClick={onToggleAI}
+          className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/5 border border-transparent rounded-lg transition-colors flex items-center gap-1.5 px-2.5"
+          title="Toggle AI Assistant"
+          icon={<Sparkles className="w-4.5 h-4.5 text-primary-accent" />}
+        >
+          <span className="text-xs font-bold hidden sm:inline">Ask AI</span>
+        </Button>
 
         {/* Save Status */}
         <div className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-lg bg-white/5">

@@ -32,10 +32,21 @@ async def lifespan(app: FastAPI):
     except asyncio.CancelledError:
         pass
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
     title="TeamHub AI Service",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+# Enable CORS for frontend and api dev servers
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(search.router)

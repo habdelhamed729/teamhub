@@ -18,6 +18,7 @@ import { DocumentCoverSection, COVERS } from "../components/DocumentCoverSection
 import { DocumentIconPicker } from "../components/DocumentIconPicker";
 import { DocumentHeaderBar } from "../components/DocumentHeaderBar";
 import type { JSONContent, Editor } from "@tiptap/react";
+import { AISidebar } from "../../ai/components/AISidebar";
 import "../styles/editor.css";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
@@ -59,6 +60,7 @@ export const DocumentEditorPage = () => {
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [isAISidebarOpen, setIsAISidebarOpen] = useState(false);
 
   const [editorRef, setEditorRef] = useState<Editor | null>(null);
   const [wordInfo, setWordInfo] = useState({
@@ -226,6 +228,33 @@ export const DocumentEditorPage = () => {
     );
   }
 
+  // Extract active hashtags from document TipTap JSON content
+  const getDocumentTags = (contentJson: any): string[] => {
+    if (!contentJson) return [];
+    const textNodes: string[] = [];
+    const walk = (node: any) => {
+      if (!node) return;
+      if (node.type === "codeBlock") {
+        return; // skip code blocks
+      }
+      if (node.type === "text" && node.text) {
+        textNodes.push(node.text);
+      }
+      if (node.content && Array.isArray(node.content)) {
+        node.content.forEach(walk);
+      }
+    };
+    walk(contentJson);
+
+    const fullText = textNodes.join(" ");
+    const matches = fullText.match(/#[a-zA-Z0-9_-]+/g);
+    if (!matches) return [];
+
+    return Array.from(new Set(matches.map((m) => m.substring(1).toLowerCase())));
+  };
+
+  const documentTags = getDocumentTags(content);
+
   /* ─── Render ──────────────────────────────────────────────────────────── */
   return (
     <div className="flex-1 flex flex-col bg-main-bg h-full overflow-hidden relative z-0">
@@ -243,6 +272,8 @@ export const DocumentEditorPage = () => {
         onShowShortcuts={() => setShowShortcutsModal(true)}
         onArchive={handleArchive}
         onDeleteClick={() => setIsDeleteModalOpen(true)}
+        isAISidebarOpen={isAISidebarOpen}
+        onToggleAI={() => setIsAISidebarOpen(!isAISidebarOpen)}
       />
 
       {/* Editor Area */}
@@ -293,6 +324,20 @@ export const DocumentEditorPage = () => {
             placeholder="Untitled"
             className="w-full bg-transparent text-[2.75rem] leading-tight font-bold text-text-primary placeholder:text-text-muted/20 focus:outline-none mb-2 tracking-tight"
           />
+
+          {/* Document Tags */}
+          {documentTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {documentTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs bg-primary-accent/15 border border-primary-accent/25 text-primary-accent px-3 py-1 rounded-full font-bold flex items-center gap-1 shadow-sm select-none"
+                >
+                  🏷️ {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Meta Info */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted mb-10 pb-6 border-b border-white/5">
@@ -356,6 +401,18 @@ export const DocumentEditorPage = () => {
       <KeyboardShortcutsModal
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
+      />
+
+      <AISidebar
+        isOpen={isAISidebarOpen}
+        onClose={() => setIsAISidebarOpen(false)}
+        documentId={documentId!}
+        onTitleSuggested={(newTitle) => setTitle(newTitle)}
+        onInsertContent={(content) => {
+          if (editorRef) {
+            editorRef.chain().focus().insertContent(content).run();
+          }
+        }}
       />
     </div>
   );

@@ -27,6 +27,12 @@ export const attachWorkspaceContext = async (
     return;
   }
 
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(workspaceId)) {
+    sendError(res, 'Invalid Workspace ID format', 400);
+    return;
+  }
+
   const membership = await prisma.workspaceMember.findUnique({
     where: {
       workspace_id_user_id: {
