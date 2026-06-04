@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer
 
 from app.config import settings
 from app.workers import job_worker
+from app.routers import search, documents
 
 # Global embedding model — loaded once at startup
 embedding_model: SentenceTransformer | None = None
@@ -37,6 +38,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.include_router(search.router)
+app.include_router(documents.router)
+
 @app.get("/health")
 async def health():
     return {
@@ -44,3 +48,4 @@ async def health():
         "embedding_model": settings.EMBEDDING_MODEL,
         "embedding_loaded": embedding_model is not None,
     }
+
