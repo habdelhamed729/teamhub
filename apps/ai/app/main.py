@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 
 from app.config import settings
 from app.workers import job_worker
-from app.routers import search, documents
+from app.routers import search, documents, stream
 
 # Global embedding model — loaded once at startup
 embedding_model: SentenceTransformer | None = None
@@ -40,6 +40,7 @@ app = FastAPI(
 
 app.include_router(search.router)
 app.include_router(documents.router)
+app.include_router(stream.router)
 
 @app.get("/health")
 async def health():
