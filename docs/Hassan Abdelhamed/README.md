@@ -87,3 +87,21 @@ This directory documents the contributions, architecture details, and accomplish
 - **Real-time Engine**: Socket.io
 - **Media Storage**: Cloudinary
 - **Frontend App**: React / Tailwind CSS / TipTap Editor / html2pdf.js
+
+---
+
+## 🏃 How to Run & Test Locally
+
+You can now start all three servers (API Gateway, React Frontend, and AI Microservice) concurrently from the root directory with a single command:
+
+```bash
+# From the project root, run:
+pnpm dev
+```
+
+This works because the Python AI microservice has been integrated as a workspace package (`@teamhub/ai`) utilizing a cross-platform wrapper `start.js` that automatically calls the correct virtual environment `.venv` uvicorn engine depending on the OS (Windows, macOS, or Linux).
+
+### 🔍 Verifying the Endpoints
+1. Import **[TeamHub API - Hassan Abdelhamed.postman.json](file:///d:/Full-Stack%20Projects/teamhub/docs/Hassan%20Abdelhamed/TeamHub%20API.postman.json)** into Postman.
+2. Ensure you configure a valid JWT token in your Postman collection variable `{{access_token}}`.
+3. Try sending a request to `/api/workspaces/:workspaceId/documents` (documents endpoint) or `/api/workspaces/:workspaceId/search` (semantic search).

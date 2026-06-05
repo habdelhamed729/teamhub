@@ -18,39 +18,80 @@ TeamHub is a full-stack monorepo application designed for seamless team coordina
 
 ## 📦 Getting Started
 
-### Prerequisites
-- Node.js (v18+)
-- pnpm (v8+)
-- PostgreSQL
+Follow these steps in order to set up and run the entire project (Frontend, Express Gateway, and Python AI Service) locally:
 
-### Installation
+### 1. Prerequisites
+- **Node.js** (v18+) & **pnpm** (v8+)
+- **Python** (v3.11+)
+- **PostgreSQL** instance (ensure the `pgvector` extension is enabled on your DB server)
+
+---
+
+### 2. Setup Guide
+
+#### **Step 1: Install Node.js Dependencies**
+Run this from the project root to install monorepo packages:
 ```bash
-# Clone the repository and install dependencies
 pnpm install
 ```
 
-### Running Locally
+#### **Step 2: Configure Environment Variables (`.env`)**
+You need to set up environment configurations for both services:
+1. **API Gateway**: Copy `apps/api/.env.example` to `apps/api/.env` and update the values.
+2. **AI Microservice**: Copy `apps/ai/.env.example` to `apps/ai/.env` and configure database connection URLs and LLM keys.
+
+#### **Step 3: Setup Python Environment for AI Service**
+Navigate to `apps/ai` and configure the virtual environment:
 ```bash
-# Run all apps (web, api) in development mode
-pnpm dev
+cd apps/ai
+
+# 1. Create the virtual environment
+python -m venv .venv
+
+# 2. Activate the virtual environment
+# Windows (PowerShell):
+.venv\Scripts\Activate.ps1
+# Windows (CMD):
+.venv\Scripts\activate.bat
+# macOS/Linux:
+source .venv/bin/activate
+
+# 3. Install required Python packages
+pip install -e ".[dev]"
+
+# Return to root directory
+cd ../..
 ```
 
-### Database Setup
+#### **Step 4: Run Database Migrations**
+Apply backend relational tables and AI vector database tables:
 ```bash
-# Apply migrations to your PostgreSQL database
+# 1. Run API Prisma migrations (from project root)
 pnpm prisma:migrate
+
+# 2. Run Alembic migrations for AI (from apps/ai with active venv, or via path)
+# From apps/ai:
+alembic upgrade head
 ```
+
+#### **Step 5: Run the Project**
+Start all servers (Express API, React Web, and FastAPI Microservice) concurrently with a single command from the project root:
+```bash
+pnpm dev
+```
+- Frontend Web App: [http://localhost:5173](http://localhost:5173) (or 5174)
+- Express API Gateway: [http://localhost:3000](http://localhost:3000)
+- AI FastAPI Service Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## 👥 Team Distribution
 
-
 | Member | Ownership Area | Main Goal | Details Page |
 | --- | --- | --- | --- |
-| Mazen Raafat | Auth + Workspace + App Shell | Build product foundation | 🔐 Mazen Raafat — Product Foundation: Auth, Workspace, App Shell |
-| Hassan Muhammad | Members + Roles + Channels | Build collaboration structure | 👥 Hassan Muhammad — Collaboration Structure: Members, Roles, Channels |
+| Mazen Raafat | Auth + Workspace + App Shell | Build product foundation | [🔐 Mazen Raafat — Product Foundation](file:///d:/Full-Stack%20Projects/teamhub/docs/Mazen%20Raafat/README.md) |
+| Hassan Muhammad | Members + Roles + Channels | Build collaboration structure | [👥 Hassan Muhammad](file:///d:/Full-Stack%20Projects/teamhub/docs/Hassan_Muhammad/TeamHub_API_Collection.json) |
 | Member 3 | Real-Time Chat + Chat Files | Build live communication | 💬 Member 3 — Real-Time Communication: Chat, Mentions, Chat Files |
 | Member 4 | Boards + Tasks + Task Alerts | Build work management | ✅ Member 4 — Work Management: Boards, Tasks, Comments, Task Alerts |
-| Member 5 | Documents + Uploads + AI + QA | Build knowledge/files/AI/integration | 🤖 Member 5 — Knowledge, Files, AI, Notifications, Integration QA |
+| Hassan Abdelhamed (M5) | Documents + Uploads + AI + QA | Build knowledge/files/AI/integration | [🤖 Hassan Abdelhamed — Knowledge, Files, AI, Notifications](file:///d:/Full-Stack%20Projects/teamhub/docs/Hassan%20Abdelhamed/README.md) |
 
 ## 🛠️ Database Management
 
@@ -65,6 +106,9 @@ pnpm --filter @teamhub/api exec prisma studio
 
 ### Database Migrations
 ```bash
-# To apply migrations:
+# To apply API database migrations:
 pnpm prisma:migrate
+
+# To apply AI service database migrations (Run inside apps/ai/):
+alembic upgrade head
 ```
