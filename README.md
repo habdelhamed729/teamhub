@@ -75,11 +75,31 @@ alembic upgrade head
 ```
 
 #### **Step 5: Run the Project**
-Start all servers (Express API, React Web, and FastAPI Microservice) concurrently with a single command from the project root:
+You need **two terminals** to run everything:
+
+**Terminal 1 — API Gateway + Web Frontend** (from project root):
 ```bash
 pnpm dev
 ```
-- Frontend Web App: [http://localhost:5173](http://localhost:5173) (or 5174)
+
+**Terminal 2 — AI FastAPI Service** (from `apps/ai` with venv activated):
+```bash
+cd apps/ai
+
+# Activate the virtual environment first:
+# Windows (PowerShell):
+.venv\Scripts\Activate.ps1
+# Windows (CMD):
+.venv\Scripts\activate.bat
+# macOS/Linux:
+source .venv/bin/activate
+
+# Start the AI server:
+uvicorn app.main:app --reload --port 8000
+```
+
+Once running, access the services at:
+- Frontend Web App: [http://localhost:5173](http://localhost:5173)
 - Express API Gateway: [http://localhost:3000](http://localhost:3000)
 - AI FastAPI Service Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
