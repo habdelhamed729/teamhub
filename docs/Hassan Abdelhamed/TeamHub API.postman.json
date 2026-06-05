@@ -1,0 +1,1799 @@
+{
+	"info": {
+		"_postman_id": "teamhub-collection-hassan-abdelhamed",
+		"name": "TeamHub API - Hassan Abdelhamed",
+		"description": "Complete Postman API Collection for TeamHub including Auth, Workspaces, Channels, Messages, and Hassan's Document, Attachment, Notification, and AI microservice features.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"display_name\": \"Hassan Abdelhamed\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.success && response.data.access_token) {",
+									"  pm.environment.set('access_token', response.data.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Me",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Search Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/search?q=has",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "has"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"display_name\": \"Hassan Abdelhamed Updated\",\n  \"avatar_url\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=Hassan\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Workspaces",
+			"item": [
+				{
+					"name": "List Workspaces",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/workspaces",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Workspace",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Hassan Team\",\n  \"slug\": \"hassan-team\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/workspaces",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Workspace",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/workspaces/{{workspaceId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Workspace",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Hassan Team Updated\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/workspaces/{{workspaceId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Workspace",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/workspaces/{{workspaceId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Workspace Members",
+			"item": [
+				{
+					"name": "List Members",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/workspaces/{{workspaceId}}/members",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"members"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Member",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"role\": \"member\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/workspaces/{{workspaceId}}/members",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"members"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Member Role",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"admin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/workspaces/{{workspaceId}}/members/{{userId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"members",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Member",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/workspaces/{{workspaceId}}/members/{{userId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"members",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Channels",
+			"item": [
+				{
+					"name": "List Channels",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Public Channel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"general\",\n  \"type\": \"public\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Private Channel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"private-notes\",\n  \"type\": \"private\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create DM Channel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"dm\",\n  \"type\": \"dm\",\n  \"participantUserId\": \"{{userId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Channel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}/{{channelId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}",
+								"{{channelId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Join Public Channel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}/{{channelId}}/join",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}",
+								"{{channelId}}",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Channel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"general-updated\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}/{{channelId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}",
+								"{{channelId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Channel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}/{{channelId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}",
+								"{{channelId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Channel Members",
+			"item": [
+				{
+					"name": "List Channel Members",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}/{{channelId}}/members",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}",
+								"{{channelId}}",
+								"members"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Channel Member",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/channels/{{workspaceId}}/{{channelId}}/members",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								"{{workspaceId}}",
+								"{{channelId}}",
+								"members"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Documents",
+			"item": [
+				{
+					"name": "List Workspace Documents",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/workspaces/:workspaceId/documents",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								":workspaceId",
+								"documents"
+							],
+							"variable": [
+								{
+									"key": "workspaceId",
+									"value": "workspace-id-or-slug"
+								}
+							]
+						},
+						"description": "Retrieve all active documents within a workspace."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Document",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"New Document\",\n  \"icon\": \"📝\",\n  \"coverUrl\": \"bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500\",\n  \"contentJson\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Hello world!\"\n          }\n        ]\n      }\n    ]\n  },\n  \"tags\": [\"Draft\", \"Project-A\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/workspaces/:workspaceId/documents",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								":workspaceId",
+								"documents"
+							],
+							"variable": [
+								{
+									"key": "workspaceId",
+									"value": "workspace-id-or-slug"
+								}
+							]
+						},
+						"description": "Create a new document inside a workspace with rich text body JSON, title, icon, tags, and cover banner."
+					},
+					"response": []
+				},
+				{
+					"name": "List Archived Documents",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/workspaces/:workspaceId/documents/archived",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								":workspaceId",
+								"documents",
+								"archived"
+							],
+							"variable": [
+								{
+									"key": "workspaceId",
+									"value": "workspace-id-or-slug"
+								}
+							]
+						},
+						"description": "Fetch archived documents from workspace."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Document Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Retrieve document by ID (includes creator, editor, and attachments info)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update/Autosave Document",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Document Title\",\n  \"icon\": \"✨\",\n  \"coverUrl\": \"bg-[#151515]\",\n  \"contentJson\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Autosaved rich text contents.\"\n          }\n        ]\n      }\n    ]\n  },\n  \"tags\": [\"Final\", \"Project-A\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Debounced background update endpoint (auto-saves title, content JSON, icon, cover, and tags)."
+					},
+					"response": []
+				},
+				{
+					"name": "Archive Document",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId/archive",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId",
+								"archive"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Archives a document without permanently deleting it."
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Document",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId/restore",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId",
+								"restore"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Restores an archived document back to the active list."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Document Permanently",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Permanently deletes a document from the database."
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Editor Image inline",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"description": "Image file to upload inline in the Tiptap editor",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/documents/upload-image",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								"upload-image"
+							]
+						},
+						"description": "Uploads an inline image directly to Cloudinary and returns its secure URL for Tiptap node embed."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Attachments",
+			"item": [
+				{
+					"name": "Upload Attachment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"description": "File to upload",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "targetType",
+									"value": "document",
+									"description": "Can be 'document', 'message', or 'task'",
+									"type": "text"
+								},
+								{
+									"key": "targetId",
+									"value": "document-or-message-or-task-id",
+									"description": "ID of the target entity",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/attachments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attachments"
+							]
+						},
+						"description": "Upload a file to Cloudinary and attach it to exactly one target entity (Document, Message, or Task)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Attachment Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/attachments/:attachmentId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attachments",
+								":attachmentId"
+							],
+							"variable": [
+								{
+									"key": "attachmentId",
+									"value": "attachment-uuid"
+								}
+							]
+						},
+						"description": "Retrieve attachment record info (Cloudinary URL, size, format)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Attachment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/attachments/:attachmentId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attachments",
+								":attachmentId"
+							],
+							"variable": [
+								{
+									"key": "attachmentId",
+									"value": "attachment-uuid"
+								}
+							]
+						},
+						"description": "Delete attachment record from database and destroy asset on Cloudinary."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "List User Notifications",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/notifications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"notifications"
+							]
+						},
+						"description": "Retrieve a list of notifications for the logged-in user (mentions, tasks, collaboration updates)."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/notifications/:notificationId/read",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"notifications",
+								":notificationId",
+								"read"
+							],
+							"variable": [
+								{
+									"key": "notificationId",
+									"value": "notification-uuid"
+								}
+							]
+						},
+						"description": "Marks a specific notification as read."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark All Notifications as Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/notifications/read-all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"notifications",
+								"read-all"
+							]
+						},
+						"description": "Marks all current notifications as read for the authenticated user."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AI Integrations",
+			"item": [
+				{
+					"name": "Document Q&A (RAG)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"What are the main launch guidelines outlined in this document?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId/qa",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId",
+								"qa"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Sends a question to query document context utilizing pgvector embeddings retrieval."
+					},
+					"response": []
+				},
+				{
+					"name": "Summarize Document",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"length\": \"medium\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId",
+								"summarize"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Summarizes the document text using Groq LLM."
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Document Tags",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId/generate-tags",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId",
+								"generate-tags"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Automatically generates relevant categorizing tag keywords based on document body content."
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Document Title",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/documents/:documentId/generate-title",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documents",
+								":documentId",
+								"generate-title"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Generates a clear title suggestion summarizing the document."
+					},
+					"response": []
+				},
+				{
+					"name": "Extract Action Items",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/documents/:documentId/extract-actions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"documents",
+								":documentId",
+								"extract-actions"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "document-uuid"
+								}
+							]
+						},
+						"description": "Walks the TipTap node structure and extracts checklist items, assignees, and dates."
+					},
+					"response": []
+				},
+				{
+					"name": "Semantic Workspace Search",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"deployment guides for production server\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/workspaces/:workspaceId/search",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"workspaces",
+								":workspaceId",
+								"search"
+							],
+							"variable": [
+								{
+									"key": "workspaceId",
+									"value": "workspace-id-or-slug"
+								}
+							]
+						},
+						"description": "Vector-embdedded query matching documents in the workspace using pgvector cosine similarity."
+					},
+					"response": []
+				},
+				{
+					"name": "Acquire SSE Stream Token",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": \"document-uuid\",\n  \"action\": \"summarize\",\n  \"payload\": {\n    \"length\": \"short\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/stream/token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stream",
+								"token"
+							]
+						},
+						"description": "Requests a short-lived token to initialize a Server-Sent Events (SSE) stream endpoint."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "workspaceId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "channelId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
