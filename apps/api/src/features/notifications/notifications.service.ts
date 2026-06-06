@@ -1,6 +1,7 @@
 import { prisma } from '../../database/prisma';
 import { NotificationType, Prisma } from '@prisma/client';
 import { getIO } from '../../config/socket';
+import { NotificationEvents } from '@teamhub/shared';
 
 // Create a notification and push it via socket in real-time
 export const createNotification = async (
@@ -23,7 +24,7 @@ export const createNotification = async (
   // Push real-time notification via Socket.io
   try {
     const io = getIO();
-    io.to(`user:${userId}`).emit('NOTIFICATION_RECEIVED', notification);
+    io.to(`user:${userId}`).emit(NotificationEvents.NOTIFICATION_RECEIVED, notification);
   } catch {
     // Socket may not be initialized in test environments — fail silently
     console.warn('Socket.io not available, skipping real-time push');
