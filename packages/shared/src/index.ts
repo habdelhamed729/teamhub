@@ -7,4 +7,5 @@ export * from "./document/document.types";
 export * from "./document/document.schema";
 export * from "./attachment/attachment.types";
 export * from "./attachment/attachment.schema";
-export * from "./messages"
+export * from "./messages";
+export * from "./work-management";

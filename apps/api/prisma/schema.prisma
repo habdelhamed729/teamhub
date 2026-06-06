@@ -75,6 +75,10 @@ model User {
   documents         Document[] @relation("DocumentCreator")
   edited_documents  Document[] @relation("DocumentLastEditor")
   attachments       Attachment[] @relation("AttachmentUploader")
+  
+  created_tasks     Task[]            @relation("TaskCreator")
+  assigned_tasks    TaskAssignee[]
+  task_comments     TaskComment[]
 }
 
 
@@ -174,6 +178,7 @@ model Workspace {
   invites Invite[]
   Channel Channel[]
   documents Document[]
+  boards    Board[]
 
   @@index([owner_id])
 }
@@ -297,17 +302,99 @@ model Document {
   @@index([is_archived])
   @@index([workspace_id, is_archived])
 }
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
 
-//simple task model placeholder
-model Task {
-  id        String @id @default(uuid())
-  title     String
+model Board {
+  id          String        @id @default(uuid())
+  workspaceId String
+  name        String
+  description String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // relations
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  columns     BoardColumn[]
+  tasks       Task[]
+
+  @@index([workspaceId])
+}
+
+model BoardColumn {
+  id        String   @id @default(uuid())
+  boardId   String
+  name      String
+  order     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  attachments Attachment[]
+  // relations
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@index([boardId])
 }
 
+model Task {
+  id          String         @id @default(uuid())
+  columnId    String
+  boardId     String
+  creatorId   String
+  title       String
+  description String?        @db.Text
+  priority    TaskPriority   @default(medium)
+  order       Int
+  dueDate     DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // relations
+  column      BoardColumn    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  board       Board          @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  creator     User           @relation("TaskCreator", fields: [creatorId], references: [id])
+  assignees   TaskAssignee[]
+  comments    TaskComment[]
+  attachments Attachment[]
+
+  @@index([columnId])
+  @@index([boardId])
+  @@index([creatorId])
+}
+
+model TaskAssignee {
+  taskId     String
+  userId     String
+  assignedAt DateTime @default(now())
+
+  // relations
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+  @@index([taskId])
+  @@index([userId])
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  taskId    String
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([authorId])
+}
 model Attachment {
   id          String   @id @default(uuid())
   file_name   String
