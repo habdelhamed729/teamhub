@@ -17,13 +17,15 @@ import { ChannelPage } from "@/features/channels/pages/ChannelPage";
 import { DirectMessagesPage } from "@/features/messages/pages/DirectMessagesPage";
 import { DocumentsPage } from "@/features/documents/pages/DocumentsPage";
 import { DocumentEditorPage } from "@/features/documents/pages/DocumentEditorPage";
+import { BoardsPage } from "@/features/work-management/pages/BoardsPage";
+import { BoardPage } from "@/features/work-management/pages/BoardPage";
 
 const router = createBrowserRouter([
   {
     element: <PublicRoute />,
     children: [
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
+      { path: "/login", element: <LoginPage /> },       
+      { path: "/register", element: <RegisterPage /> }, 
     ],
   },
   {
@@ -40,15 +42,15 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "/workspaces/:workspaceId/members",
+            path: "/workspaces/:workspaceId/members",   
             element: <MembersPage />,
           },
           {
-            path: "/workspaces/:workspaceId/messages",
+            path: "/workspaces/:workspaceId/messages",  
             element: <DirectMessagesPage />,
           },
           {
-            path: "/workspaces/:workspaceId/channels",
+            path: "/workspaces/:workspaceId/channels",  
             element: <ChannelsPage />,
           },
           {
@@ -56,12 +58,20 @@ const router = createBrowserRouter([
             element: <ChannelPage />,
           },
           {
-            path: "/workspaces/:workspaceId/documents",
+            path: "/workspaces/:workspaceId/documents", 
             element: <DocumentsPage />,
           },
           {
             path: "/workspaces/:workspaceId/docs/:documentId",
             element: <DocumentEditorPage />,
+          },
+          {
+            path: "/workspaces/:workspaceId/tasks",
+            element: <BoardsPage />,
+          },
+          {
+            path: "/workspaces/:workspaceId/tasks/:boardId",
+            element: <BoardPage />,
           },
           {
             path: "/settings",
