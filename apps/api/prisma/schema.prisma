@@ -36,6 +36,7 @@ enum NotificationType {
   mention
   task_assigned
   channel_invite
+  message
 }
 
 enum MessageType {
@@ -307,6 +308,12 @@ enum TaskPriority {
   medium
   high
   urgent
+}
+
+// Placeholder to prevent Prisma from dropping the alembic_version table
+model AlembicVersion {
+  version_num String @id @db.VarChar(32)
+  @@map("alembic_version")
 }
 
 model Board {

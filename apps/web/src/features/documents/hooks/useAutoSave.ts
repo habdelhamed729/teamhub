@@ -15,8 +15,10 @@ export const useAutoSave = ({
   const latestRef = useRef({ title, content });
   const isFirstRender = useRef(true);
 
-  // Always keep latest values in ref
-  latestRef.current = { title, content };
+  // Always keep latest values in ref - update in effect, not render
+  useEffect(() => {
+    latestRef.current = { title, content };
+  }, [title, content]);
 
   // Reset states when documentId changes
   useEffect(() => {

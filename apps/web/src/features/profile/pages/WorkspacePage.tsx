@@ -12,18 +12,18 @@ export const WorkspacePage = () => {
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
   const queryClient = useQueryClient();
 
-  const [wsName, setWsName] = useState(activeWorkspace?.name || '');
-  const [wsSlug, setWsSlug] = useState(activeWorkspace?.slug || '');
+  const [wsName, setWsName] = useState('');
+  const [wsSlug, setWsSlug] = useState('');
 
-  // Sync state with active workspace
+  // Sync state with active workspace ONLY when it actually changes to a different workspace
   useEffect(() => {
     if (activeWorkspace) {
       setWsName(activeWorkspace.name);
       setWsSlug(activeWorkspace.slug);
     }
-  }, [activeWorkspace]);
+  }, [activeWorkspace?.id]);
 
-  // Auto-generate slug from name
+  // Auto-generate slug from name - use a ref or only trigger on manual name change
   useEffect(() => {
     if (wsName && wsName !== activeWorkspace?.name) {
       const slug = wsName
