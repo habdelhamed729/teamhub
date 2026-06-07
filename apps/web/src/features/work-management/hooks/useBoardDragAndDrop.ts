@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
-import { 
+import type { 
   DragStartEvent, 
   DragEndEvent, 
+} from '@dnd-kit/core';
+import {
   PointerSensor, 
   TouchSensor, 
   KeyboardSensor, 
@@ -9,7 +11,7 @@ import {
   useSensors 
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { BoardDetailDTO, TaskDTO } from '@teamhub/shared';
+import type { BoardDetailDTO, TaskDTO } from '@teamhub/shared';
 import { useTaskMutations } from './useTaskMutations';
 import { findColumnOfTask } from '../utils/workManagementDnD';
 

@@ -13,9 +13,14 @@ import { Button } from '@/shared/components/Button';
 import { ChevronLeft, Plus, Settings } from 'lucide-react';
 import type { TaskDTO, BoardColumnDTO } from '@teamhub/shared';
 import { BoardDragDropProvider } from '../components/BoardDragDropProvider';
+import { useBoardRealtime } from '../hooks/useBoardRealtime';
 
 export const BoardPage = () => {
   const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>();
+  
+  // Activate real-time sync
+  useBoardRealtime(boardId || '');
+
   const { data: board, isLoading, isError } = useBoardDetail(boardId || '');
   const { deleteBoard, updateBoard } = useBoardMutations(workspaceId || '');
   const { 
@@ -38,6 +43,8 @@ export const BoardPage = () => {
 
   const [isBoardSettingsOpen, setIsBoardSettingsOpen] = useState(false);
   const [isDeleteBoardConfirmOpen, setIsDeleteBoardConfirmOpen] = useState(false);
+  const [isDeleteTaskConfirmOpen, setIsDeleteTaskConfirmOpen] = useState(false);
+  const [isDeleteColumnConfirmOpen, setIsDeleteColumnConfirmOpen] = useState(false);
 
   const activeTask = useMemo(() => {
     if (!board || !activeTaskId) return null;
@@ -143,11 +150,7 @@ export const BoardPage = () => {
               setEditingTask(task);
               setIsTaskModalOpen(true);
             }}
-            onDelete={(id) => {
-              if (window.confirm('Are you sure you want to delete this task?')) {
-                deleteTask.mutate(id, { onSuccess: () => setActiveTaskId(null) });
-              }
-            }}
+            onDelete={() => setIsDeleteTaskConfirmOpen(true)}
           />
         </>
       )}
@@ -192,11 +195,7 @@ export const BoardPage = () => {
             });
           }
         }}
-        onDelete={editingColumn ? () => {
-          if (window.confirm('Delete this column and all its tasks?')) {
-            deleteColumn.mutate(editingColumn.id, { onSuccess: () => setIsColumnModalOpen(false) });
-          }
-        } : undefined}
+        onDelete={editingColumn ? () => setIsDeleteColumnConfirmOpen(true) : undefined}
       />
 
       <BoardModal
@@ -226,6 +225,42 @@ export const BoardPage = () => {
         }}
         title="Delete Board"
         description="This will permanently delete the board and all its tasks. This action cannot be undone."
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteTaskConfirmOpen}
+        onClose={() => setIsDeleteTaskConfirmOpen(false)}
+        onConfirm={() => {
+          if (activeTaskId) {
+            deleteTask.mutate(activeTaskId, {
+              onSuccess: () => {
+                setIsDeleteTaskConfirmOpen(false);
+                setActiveTaskId(null);
+              }
+            });
+          }
+        }}
+        isLoading={deleteTask.isPending}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteColumnConfirmOpen}
+        onClose={() => setIsDeleteColumnConfirmOpen(false)}
+        onConfirm={() => {
+          if (editingColumn) {
+            deleteColumn.mutate(editingColumn.id, {
+              onSuccess: () => {
+                setIsDeleteColumnConfirmOpen(false);
+                setIsColumnModalOpen(false);
+              }
+            });
+          }
+        }}
+        isLoading={deleteColumn.isPending}
+        title="Delete Column"
+        description="This will permanently delete the column and all its tasks. Are you sure?"
       />
     </div>
   );

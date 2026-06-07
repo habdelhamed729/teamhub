@@ -1,16 +1,18 @@
-import { 
-  BoardDTO, 
-  BoardColumnDTO, 
-  TaskDTO, 
-  TaskAssigneeDTO, 
+import {
+  BoardDTO,
+  BoardColumnDTO,
+  TaskDTO,
+  TaskAssigneeDTO,
   TaskCommentDTO,
-  BoardDetailDTO
+  BoardDetailDTO,
+  UserStatus,
+  TaskPriority
 } from '@teamhub/shared';
-import { 
-  Board as PrismaBoard, 
-  BoardColumn as PrismaBoardColumn, 
-  Task as PrismaTask, 
-  TaskAssignee as PrismaTaskAssignee, 
+import {
+  Board as PrismaBoard,
+  BoardColumn as PrismaBoardColumn,
+  Task as PrismaTask,
+  TaskAssignee as PrismaTaskAssignee,
   TaskComment as PrismaTaskComment,
   User as PrismaUser
 } from '@prisma/client';
@@ -40,7 +42,7 @@ export const mapAssigneeToDTO = (assignee: PrismaTaskAssignee & { user: PrismaUs
     email: assignee.user.email,
     display_name: assignee.user.display_name,
     avatar_url: assignee.user.avatar_url,
-    status: assignee.user.status as any,
+    status: assignee.user.status as UserStatus,
     created_at: assignee.user.created_at,
     updated_at: assignee.user.updated_at,
   },
@@ -54,7 +56,7 @@ export const mapTaskToDTO = (task: PrismaTask & { assignees: (PrismaTaskAssignee
   creatorId: task.creatorId,
   title: task.title,
   description: task.description,
-  priority: task.priority as any,
+  priority: task.priority as TaskPriority,
   order: task.order,
   dueDate: task.dueDate,
   assignees: task.assignees.map(mapAssigneeToDTO),
@@ -71,7 +73,7 @@ export const mapCommentToDTO = (comment: PrismaTaskComment & { author: PrismaUse
     email: comment.author.email,
     display_name: comment.author.display_name,
     avatar_url: comment.author.avatar_url,
-    status: comment.author.status as any,
+    status: comment.author.status as UserStatus,
     created_at: comment.author.created_at,
     updated_at: comment.author.updated_at,
   },
