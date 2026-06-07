@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { useMessages, useDeleteMessage } from '../hooks/useMessages';
 import { useAddReaction, useRemoveReaction } from '../hooks/useReactions';
 import { MessageItem } from './MessageItem';
@@ -17,12 +17,11 @@ export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, ch
   const addReaction = useAddReaction(channelId);
   const removeReaction = useRemoveReaction(channelId);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const allMessages = data?.pages.flatMap((page) => page.messages) || [];
 
   useEffect(() => {
-    // Scroll to bottom when messages arrive. Because of flex-col-reverse,
-    // we want to make sure the scroll view starts at the bottom.
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -47,6 +46,23 @@ export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, ch
     }
   };
 
+  /** Scroll the container to the message with the given id and briefly highlight it */
+  const scrollToMessage = useCallback((messageId: string) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const el = container.querySelector<HTMLElement>(`[data-message-id="${messageId}"]`);
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Brief highlight flash
+    el.classList.add('bg-primary-accent/10', 'rounded-xl', 'transition-colors', 'duration-700');
+    setTimeout(() => {
+      el.classList.remove('bg-primary-accent/10');
+    }, 1500);
+  }, []);
+
   if (isLoading) {
     return <div className="flex-1 p-6 flex items-center justify-center text-text-muted">Loading messages...</div>;
   }
@@ -63,7 +79,10 @@ export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, ch
   }
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 flex flex-col-reverse gap-2 bg-fixed">
+    <div
+      ref={scrollContainerRef}
+      className="flex-1 overflow-y-auto overflow-x-hidden p-4 flex flex-col-reverse gap-2 bg-fixed"
+    >
       <div ref={bottomRef} />
       {allMessages.map((msg) => {
         // Resolve parent message object if this message is a reply
@@ -72,15 +91,17 @@ export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, ch
           : null;
 
         return (
-          <MessageItem
-            key={msg.id}
-            message={msg}
-            parentMessage={parentMessage}
-            onReply={onReply}
-            onReact={handleReact}
-            onDelete={handleDelete}
-            channelType={channelType}
-          />
+          <div key={msg.id} data-message-id={msg.id}>
+            <MessageItem
+              message={msg}
+              parentMessage={parentMessage}
+              onReply={onReply}
+              onReact={handleReact}
+              onDelete={handleDelete}
+              onScrollToParent={scrollToMessage}
+              channelType={channelType}
+            />
+          </div>
         );
       })}
     </div>

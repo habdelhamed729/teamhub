@@ -51,6 +51,10 @@ export const useNotifications = () => {
       console.log('Received real-time notification:', notification);
       refetch();
 
+      if (notification.type === 'message') {
+        return;
+      }
+
       toast.info(notification.title, {
         description: notification.body,
         duration: 5000,

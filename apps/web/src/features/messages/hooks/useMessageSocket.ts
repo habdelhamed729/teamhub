@@ -20,30 +20,35 @@ export const useMessageSocket = (channelId: string) => {
 
     // 2. Setup message lifecycle listeners
     
-    // MESSAGE_RECEIVED
+    // MESSAGE_RECEIVED — add ALL messages (including replies) to the main feed
     const handleMessageReceived = (message: Message) => {
+      queryClient.setQueryData<InfiniteData<PaginatedMessages>>(['messages', channelId], (old) => {
+        if (!old) return old;
+
+        // Prevent duplication
+        const exists = old.pages.some((page) => page.messages.some((m) => m.id === message.id));
+        if (exists) return old;
+
+        // Clean out any matching optimistic/temp message
+        const cleanPages = old.pages.map((page) => ({
+          ...page,
+          messages: page.messages.filter(
+            (m) => !m.id.startsWith('temp-') || m.content !== message.content,
+          ),
+        }));
+
+        const newPages = [...cleanPages];
+        if (newPages[0]) {
+          newPages[0] = {
+            ...newPages[0],
+            messages: [message, ...newPages[0].messages],
+          };
+        }
+        return { ...old, pages: newPages };
+      });
+
+      // If it's a reply, also increment the parent's replyCount in the feed
       if (message.parentMessageId) {
-        // Handle reply (add to replies cache)
-        const repliesKey = ['replies', message.parentMessageId];
-        queryClient.setQueryData<InfiniteData<PaginatedMessages>>(repliesKey, (old) => {
-          if (!old) return old;
-
-          // Check if already in cache
-          const exists = old.pages.some((page) => page.messages.some((m) => m.id === message.id));
-          if (exists) return old;
-
-          const newPages = [...old.pages];
-          const lastIdx = newPages.length - 1;
-          if (newPages[lastIdx]) {
-            newPages[lastIdx] = {
-              ...newPages[lastIdx],
-              messages: [...newPages[lastIdx].messages, message],
-            };
-          }
-          return { ...old, pages: newPages };
-        });
-
-        // Also increment parent message's replyCount in the main message list
         queryClient.setQueryData<InfiniteData<PaginatedMessages>>(['messages', channelId], (old) => {
           if (!old) return old;
           return {
@@ -51,43 +56,17 @@ export const useMessageSocket = (channelId: string) => {
             pages: old.pages.map((page) => ({
               ...page,
               messages: page.messages.map((m) =>
-                m.id === message.parentMessageId ? { ...m, replyCount: m.replyCount + 1 } : m
+                m.id === message.parentMessageId ? { ...m, replyCount: m.replyCount + 1 } : m,
               ),
             })),
           };
         });
-      } else {
-        // Handle top-level message (add to main list cache)
-        queryClient.setQueryData<InfiniteData<PaginatedMessages>>(['messages', channelId], (old) => {
-          if (!old) return old;
-
-          // Prevent duplication
-          const exists = old.pages.some((page) => page.messages.some((m) => m.id === message.id));
-          if (exists) return old;
-
-          // Clean out optimistic/temp matching message if any
-          const cleanPages = old.pages.map((page) => ({
-            ...page,
-            messages: page.messages.filter((m) => !m.id.startsWith('temp-') || m.content !== message.content),
-          }));
-
-          const newPages = [...cleanPages];
-          if (newPages[0]) {
-            newPages[0] = {
-              ...newPages[0],
-              messages: [message, ...newPages[0].messages],
-            };
-          }
-          return { ...old, pages: newPages };
-        });
       }
     };
 
-    // MESSAGE_UPDATED
+    // MESSAGE_UPDATED — always update the main feed
     const handleMessageUpdated = (message: Message) => {
-      const targetQueryKey = message.parentMessageId ? ['replies', message.parentMessageId] : ['messages', channelId];
-
-      queryClient.setQueryData<InfiniteData<PaginatedMessages>>(targetQueryKey, (old) => {
+      queryClient.setQueryData<InfiniteData<PaginatedMessages>>(['messages', channelId], (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -99,22 +78,17 @@ export const useMessageSocket = (channelId: string) => {
       });
     };
 
-    // MESSAGE_DELETED
+    // MESSAGE_DELETED — remove from main feed
     const handleMessageDeleted = (payload: { messageId: string; channelId: string }) => {
-      // Clean from both potential feeds (top-level and replies)
-      const feedKeys = [['messages', channelId], ['replies', payload.messageId]];
-      
-      feedKeys.forEach((key) => {
-        queryClient.setQueryData<InfiniteData<PaginatedMessages>>(key, (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              messages: page.messages.filter((m) => m.id !== payload.messageId),
-            })),
-          };
-        });
+      queryClient.setQueryData<InfiniteData<PaginatedMessages>>(['messages', channelId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            messages: page.messages.filter((m) => m.id !== payload.messageId),
+          })),
+        };
       });
     };
 

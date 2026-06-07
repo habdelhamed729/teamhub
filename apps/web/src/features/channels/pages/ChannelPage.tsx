@@ -28,6 +28,12 @@ export const ChannelPage: React.FC = () => {
   const [showMembers, setShowMembers] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
+  // Reset state on channel change
+  useEffect(() => {
+    setShowMembers(false);
+    setReplyingTo(null);
+  }, [channelId]);
+
   // Bind real-time socket events for this channel
   useMessageSocket(channelId!);
 
@@ -81,40 +87,44 @@ export const ChannelPage: React.FC = () => {
     <div className="flex h-[calc(100vh-8rem)] -mt-2 -mx-2 lg:-mt-4 lg:-mx-4 lg:h-[calc(100vh-9rem)] border border-white/5 rounded-2xl overflow-hidden bg-surface-primary shadow-2xl">
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
-         {/* Header */}
-         <div className="h-[83px] border-b border-white/5 flex items-center justify-between px-6 bg-[#2A2F36] shrink-0">
-           <div className="flex items-center gap-3">
-             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-accent text-slate-950 font-bold shadow-md">
-               {channel?.type === 'dm' ? <MessageSquare className="h-5 w-5" /> : <Hash className="h-5 w-5" />}
-             </div>
-             <div>
-               <h2 className="font-semibold text-lg text-white font-[Roboto] leading-snug">{channel?.name}</h2>
-               {channel?.type !== 'dm' && <p className="text-xs text-white/60 font-[Roboto]">{members?.length || 0} members</p>}
-             </div>
-           </div>
-           {channel?.type !== 'dm' && (
-             <Button
-               variant="ghost"
-               onClick={() => setShowMembers(!showMembers)}
-               className={`text-white/70 hover:text-white hover:bg-white/5 p-2 rounded-xl transition-colors ${showMembers ? 'bg-white/10 text-white' : ''}`}
-             >
-               <Users className="h-5 w-5" />
-             </Button>
-           )}
-         </div>
-         
-         {/* Message List area */}
-         <MessageList channelId={channelId!} onReply={setReplyingTo} channelType={channel?.type} />
+        {/* Header */}
+        <div className="h-[83px] border-b border-white/5 flex items-center justify-between px-6 bg-[#2A2F36] shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-accent text-slate-950 font-bold shadow-md">
+              {channel?.type === 'dm' ? <MessageSquare className="h-5 w-5" /> : <Hash className="h-5 w-5" />}
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg text-white font-[Roboto] leading-snug">{channel?.name}</h2>
+              {channel?.type !== 'dm' && <p className="text-xs text-white/60 font-[Roboto]">{members?.length || 0} members</p>}
+            </div>
+          </div>
+          {channel?.type !== 'dm' && (
+            <Button
+              variant="ghost"
+              onClick={() => setShowMembers(!showMembers)}
+              className={`text-white/70 hover:text-white hover:bg-white/5 p-2 rounded-xl transition-colors ${showMembers ? 'bg-white/10 text-white' : ''}`}
+            >
+              <Users className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
 
-         {/* Composer area */}
-         <div className="p-4 bg-surface-elevated shrink-0 relative">
-           <TypingIndicatorDisplay channelId={channelId!} />
-           <MessageComposer
-             channelId={channelId!}
-             replyingTo={replyingTo}
-             onCancelReply={() => setReplyingTo(null)}
-           />
-         </div>
+        {/* Message List area */}
+        <MessageList
+          channelId={channelId!}
+          onReply={(msg) => setReplyingTo(msg)}
+          channelType={channel?.type}
+        />
+
+        {/* Composer area */}
+        <div className="p-4 bg-surface-elevated shrink-0 relative">
+          <TypingIndicatorDisplay channelId={channelId!} />
+          <MessageComposer
+            channelId={channelId!}
+            replyingTo={replyingTo}
+            onCancelReply={() => setReplyingTo(null)}
+          />
+        </div>
       </div>
 
       {/* Members Sidebar */}
@@ -124,7 +134,7 @@ export const ChannelPage: React.FC = () => {
             <h3 className="font-semibold text-text-primary">Members</h3>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            
+
             <div className="relative">
               <div className="flex items-center gap-2">
                 <input
@@ -145,19 +155,26 @@ export const ChannelPage: React.FC = () => {
               {debounced && suggestions.length > 0 && (
                 <ul className="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-lg border border-white/10 bg-surface-elevated shadow-xl">
                   {suggestions.map((s) => (
-                    s.user !==undefined && (
-                    <li
-                      key={s.user.id}
-                      onClick={() => { setSelectedUserId(s.user?.id || null); setQuery(s.user?.display_name || s.user?.email || ""); }}
-                      className="cursor-pointer px-4 py-3 hover:bg-surface-primary/60 flex items-center gap-3 transition-colors"
-                    >
-                      <div className="h-8 w-8 rounded-full bg-primary-accent/10 flex items-center justify-center font-semibold text-primary-accent">{s.user.display_name?.[0] ?? s.user.email?.[0]}</div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium truncate">{s.user.display_name || s.user.email}</span>
-                        <span className="text-xs text-text-muted truncate">{s.user.email}</span>
-                      </div>
-                    </li>
-                  )))}
+                    s.user !== undefined && (
+                      <li
+                        key={s.user.id}
+                        onClick={() => { setSelectedUserId(s.user?.id || null); setQuery(s.user?.display_name || s.user?.email || ''); }}
+                        className="cursor-pointer px-4 py-3 hover:bg-surface-primary/60 flex items-center gap-3 transition-colors"
+                      >
+                        {s.user.avatar_url ? (
+                          <img src={s.user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-primary-accent/10 flex items-center justify-center font-semibold text-primary-accent shrink-0">
+                            {s.user.display_name?.[0] ?? s.user.email?.[0]}
+                          </div>
+                        )}
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-medium truncate">{s.user.display_name || s.user.email}</span>
+                          <span className="text-xs text-text-muted truncate">{s.user.email}</span>
+                        </div>
+                      </li>
+                    )
+                  ))}
                 </ul>
               )}
             </div>
@@ -170,15 +187,21 @@ export const ChannelPage: React.FC = () => {
                   {members?.length ? members.map((m: WorkspaceMember) => (
                     <li key={m.user.id} className="rounded-xl border border-white/5 bg-surface-primary/50 px-3 py-2.5 flex items-center justify-between group hover:border-primary-accent/30 transition-colors">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-8 w-8 rounded-full bg-primary-accent/10 flex items-center justify-center font-semibold text-primary-accent shrink-0">{m.user.display_name?.[0] ?? m.user.email?.[0]}</div>
+                        {m.user.avatar_url ? (
+                          <img src={m.user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-primary-accent/10 flex items-center justify-center font-semibold text-primary-accent shrink-0">
+                            {m.user.display_name?.[0] ?? m.user.email?.[0]}
+                          </div>
+                        )}
                         <div className="flex flex-col min-w-0">
                           <span className="text-sm font-medium truncate group-hover:text-primary-accent transition-colors">{m.user.display_name || m.user.email}</span>
                           <span className="text-xs text-text-muted truncate">{m.user.email}</span>
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleStartDM(m.user.id, m.user.display_name || m.user.email || 'User')}
                         disabled={createChannel.isPending}
                         className="text-text-muted hover:text-primary-accent opacity-0 group-hover:opacity-100 transition-opacity"

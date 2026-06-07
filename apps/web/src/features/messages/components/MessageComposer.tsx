@@ -46,6 +46,9 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       {
         content: trimmed,
         parentMessageId: replyingTo?.id,
+        parentMessage: replyingTo
+          ? { id: replyingTo.id, content: replyingTo.content, sender: replyingTo.sender, attachments: replyingTo.attachments }
+          : undefined,
         attachmentIds: uploadedAttachments.map((a) => a.id),
       },
       {

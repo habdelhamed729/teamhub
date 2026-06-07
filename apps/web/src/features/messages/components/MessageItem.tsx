@@ -3,7 +3,7 @@ import { CheckCheck, ChevronDown, Clock } from 'lucide-react';
 
 
 
-import type { Message, Reaction } from '@teamhub/shared';
+import type { Message } from '@teamhub/shared';
 import { useAuthStore } from '@/app/store/useAuthStore';
 import { ReplyPreview } from './ReplyPreview';
 import { FileAttachment } from './FileAttachment';
@@ -17,6 +17,7 @@ interface MessageItemProps {
   onReply?: (message: Message) => void;
   onReact?: (messageId: string, emoji: string) => void;
   onDelete?: (messageId: string) => void;
+  onScrollToParent?: (parentMessageId: string) => void;
   channelType?: string;
 }
 
@@ -26,6 +27,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   onReply,
   onReact,
   onDelete,
+  onScrollToParent,
   channelType,
 }) => {
   const currentUserId = useAuthStore((s) => s.user?.id);
@@ -73,18 +75,26 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     >
       {/* Avatar (Only shown in group/channel chats, hidden in DMs) */}
       {channelType !== 'dm' && (
-        <div className="flex h-10 w-10 shrink-0 select-none items-center justify-center rounded-xl bg-primary-accent/15 font-bold text-primary-accent shadow-sm border border-primary-accent/10">
-          {message.sender?.display_name?.charAt(0).toUpperCase() ||
-            message.sender?.email?.charAt(0).toUpperCase() ||
-            '?'}
-        </div>
+        message.sender?.avatar_url ? (
+          <img
+            src={message.sender.avatar_url}
+            alt={message.sender.display_name || 'User avatar'}
+            className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-sm border border-white/10"
+          />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 select-none items-center justify-center rounded-xl bg-primary-accent/15 font-bold text-primary-accent shadow-sm border border-primary-accent/10">
+            {message.sender?.display_name?.charAt(0).toUpperCase() ||
+              message.sender?.email?.charAt(0).toUpperCase() ||
+              '?'}
+          </div>
+        )
       )}
 
       {/* Message content block */}
       <div className={`flex flex-col min-w-0 max-w-[70%] relative ${isOwn ? 'items-end' : 'items-start'}`}>
         
         {/* Sender Info (Only show name for others in group) */}
-        {channelType !== 'dm' &&!isOwn && message.sender && (
+        {channelType !== 'dm' && !isOwn && message.sender && (
           <span className="text-sm font-semibold text-primary-accent mb-1 font-[Roboto]">
             {message.sender.display_name || message.sender.email}
           </span>
@@ -119,15 +129,28 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             }`}
           >
             {/* 1. Reply Preview block inside bubble */}
-            {message.parentMessageId && (parentMessage || message.content) && (
+            {message.parentMessageId && (message.parentMessage || parentMessage) && (
               <ReplyPreview
                 message={
-                  parentMessage
-                    ? { content: parentMessage.content, sender: parentMessage.sender }
-                    : { content: 'Replying to previous message...', sender: { display_name: 'Original Message' } as any }
+                  message.parentMessage
+                    ? {
+                        content: message.parentMessage.content,
+                        sender: message.parentMessage.sender,
+                        attachments: message.parentMessage.attachments,
+                      }
+                    : {
+                        content: parentMessage!.content,
+                        sender: parentMessage!.sender,
+                        attachments: parentMessage!.attachments,
+                      }
                 }
                 variant="bubble"
                 isOwn={isOwn}
+                onClick={
+                  onScrollToParent && message.parentMessageId
+                    ? () => onScrollToParent(message.parentMessageId!)
+                    : undefined
+                }
               />
             )}
 
@@ -189,6 +212,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             ))}
           </div>
         )}
+
+
       </div>
 
       {/* Context Menu */}

@@ -3,7 +3,7 @@ import { z } from "zod";
 export const createMessageSchema = z.object({
   channelId: z.string().uuid(),
 
-  content: z.string().min(1).max(4000),
+  content: z.string().max(4000).default(""),
 
   parentMessageId: z.string().uuid().optional(),
 

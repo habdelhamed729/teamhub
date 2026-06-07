@@ -11,7 +11,7 @@ export const Header = () => {
   const { logout } = useLogout();
 
   return (
-    <header className="h-16 bg-surface-secondary/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 shrink-0">
+    <header className="h-16 bg-surface-secondary/50 z-3 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 shrink-0">
       {/* Search Bar Placeholder */}
       <div className="flex-1 max-w-xl">
         <div className="relative group">
