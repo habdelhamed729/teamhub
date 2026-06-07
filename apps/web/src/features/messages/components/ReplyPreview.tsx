@@ -32,8 +32,8 @@ export const ReplyPreview: React.FC<ReplyPreviewProps> = ({
   const isComposer = variant === 'composer';
 
   const containerClasses = isComposer || isOwn
-    ? 'bg-reply-own-bg border-l-[3px] border-reply-own-border'
-    : 'bg-reply-other-bg border-l-[3px] border-reply-other-border';
+    ? 'bg-[#276259] border-l-[3px] border-[#1c4942]'
+    : 'bg-[#a3a3a3] border-l-[3px] border-[#4f4f4f]';
 
   const nameClasses = isComposer || isOwn
     ? 'text-primary-accent'
