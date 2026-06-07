@@ -3,7 +3,7 @@ import { CheckCheck, ChevronDown, Clock } from 'lucide-react';
 
 
 
-import type { Message } from '@teamhub/shared';
+import type { Message, ChannelMember } from '@teamhub/shared';
 import { useAuthStore } from '@/app/store/useAuthStore';
 import { ReplyPreview } from './ReplyPreview';
 import { FileAttachment } from './FileAttachment';
@@ -19,6 +19,7 @@ interface MessageItemProps {
   onDelete?: (messageId: string) => void;
   onScrollToParent?: (parentMessageId: string) => void;
   channelType?: string;
+  members?: ChannelMember[];
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({
@@ -29,8 +30,105 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   onDelete,
   onScrollToParent,
   channelType,
+  members,
 }) => {
   const currentUserId = useAuthStore((s) => s.user?.id);
+  
+  const formatMessageContent = (content: string) => {
+    if (!content) return null;
+    
+    const mentionRegex = /@([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match;
+    
+    while ((match = mentionRegex.exec(content)) !== null) {
+      const matchIndex = match.index;
+      const userId = match[1];
+      
+      if (matchIndex > lastIndex) {
+        parts.push(content.substring(lastIndex, matchIndex));
+      }
+      
+      const member = members?.find((m) => m.user?.id === userId);
+      const name = member?.user?.display_name || member?.user?.email || 'User';
+      
+      parts.push(
+        <span 
+          key={`mention-${userId}-${matchIndex}`} 
+          className="font-semibold text-emerald-700 bg-primary-accent/30 px-1 py-0.5 rounded text-[15px]"
+        >
+          @{name}
+        </span>
+      );
+      
+      lastIndex = mentionRegex.lastIndex;
+    }
+    
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex));
+    }
+    
+    if (parts.length === 0) {
+      const allRegex = /@all\b/gi;
+      let allLastIndex = 0;
+      let allMatch;
+      const allParts: React.ReactNode[] = [];
+      
+      while ((allMatch = allRegex.exec(content)) !== null) {
+        const matchIndex = allMatch.index;
+        if (matchIndex > allLastIndex) {
+          allParts.push(content.substring(allLastIndex, matchIndex));
+        }
+        allParts.push(
+          <span 
+            key={`all-${matchIndex}`} 
+            className="font-semibold text-emerald-700 bg-primary-accent/30 px-1 py-0.5 rounded text-[15px]"
+          >
+            @all
+          </span>
+        );
+        allLastIndex = allRegex.lastIndex;
+      }
+      
+      if (allLastIndex < content.length) {
+        allParts.push(content.substring(allLastIndex));
+      }
+      
+      return allParts.length > 0 ? allParts : content;
+    }
+    
+    return parts.map((part, idx) => {
+      if (typeof part !== 'string') return part;
+      
+      const allRegex = /@all\b/gi;
+      let allLastIndex = 0;
+      let allMatch;
+      const allParts: React.ReactNode[] = [];
+      
+      while ((allMatch = allRegex.exec(part)) !== null) {
+        const matchIndex = allMatch.index;
+        if (matchIndex > allLastIndex) {
+          allParts.push(part.substring(allLastIndex, matchIndex));
+        }
+        allParts.push(
+          <span 
+            key={`all-${idx}-${matchIndex}`} 
+            className="font-semibold text-emerald-700 bg-primary-accent/30 px-1 py-0.5 rounded text-[15px]"
+          >
+            @all
+          </span>
+        );
+        allLastIndex = allRegex.lastIndex;
+      }
+      
+      if (allLastIndex < part.length) {
+        allParts.push(part.substring(allLastIndex));
+      }
+      
+      return allParts.length > 0 ? <React.Fragment key={`part-frag-${idx}`}>{allParts}</React.Fragment> : part;
+    });
+  };
   const isOwn = message.sender?.id === currentUserId;
   const isTemp = message.id.startsWith('temp-');
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -166,7 +264,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             {/* 3. Text Message content */}
             {message.content && (
               <p className="text-[16px] font-normal leading-[1.25] font-[Roboto]">
-                {message.content}
+                {formatMessageContent(message.content)}
               </p>
             )}
 

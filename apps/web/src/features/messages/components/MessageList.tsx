@@ -2,16 +2,17 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { useMessages, useDeleteMessage } from '../hooks/useMessages';
 import { useAddReaction, useRemoveReaction } from '../hooks/useReactions';
 import { MessageItem } from './MessageItem';
-import type { Message } from '@teamhub/shared';
+import type { Message, ChannelMember } from '@teamhub/shared';
 import { toast } from 'sonner';
 
 interface MessageListProps {
   channelId: string;
   onReply: (message: Message) => void;
   channelType?: string;
+  members?: ChannelMember[];
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, channelType }) => {
+export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, channelType, members }) => {
   const { data, isLoading } = useMessages(channelId);
   const deleteMessage = useDeleteMessage(channelId);
   const addReaction = useAddReaction(channelId);
@@ -100,6 +101,7 @@ export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, ch
               onDelete={handleDelete}
               onScrollToParent={scrollToMessage}
               channelType={channelType}
+              members={members}
             />
           </div>
         );
@@ -107,3 +109,4 @@ export const MessageList: React.FC<MessageListProps> = ({ channelId, onReply, ch
     </div>
   );
 };
+

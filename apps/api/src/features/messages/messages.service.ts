@@ -230,7 +230,20 @@ export const createMessage = async (
     }
 
     // 3. Parse & store mentions
-    const mentionedUserIds = parseMentions(dto.content);
+    let mentionedUserIds = parseMentions(dto.content);
+    const isGroup = channel.type !== 'dm';
+    const hasAtAll = /@all\b/i.test(dto.content);
+    if (hasAtAll && isGroup) {
+      const channelMembers = await tx.channelMember.findMany({
+        where: { channel_id: channelId },
+        select: { user_id: true },
+      });
+      const memberIds = channelMembers
+        .map((m) => m.user_id)
+        .filter((uid) => uid !== senderId);
+      mentionedUserIds = Array.from(new Set([...mentionedUserIds, ...memberIds]));
+    }
+
     if (mentionedUserIds.length > 0) {
       // Only mention users who actually exist
       const existingUsers = await tx.user.findMany({
@@ -265,58 +278,72 @@ export const createMessage = async (
 
   const formatted = formatMessage(message, senderId);
 
-  // ── Socket: broadcast to channel ──
+  // ── Socket & Notifications ──
   try {
     const io = getIO();
     io.to(`channel:${channelId}`).emit(MessageEvents.MESSAGE_RECEIVED, formatted);
 
-    // ── Socket: emit MENTION_CREATED to mentioned users ──
-    const mentionedUserIds = parseMentions(dto.content);
-    if (mentionedUserIds.length > 0) {
+    // Fetch active sockets in this channel to determine who is "in the chat"
+    const activeSockets = await io.in(`channel:${channelId}`).fetchSockets();
+    const activeUserIds = new Set(activeSockets.map((s) => s.handshake.auth?.userId).filter(Boolean));
+
+    const isGroup = channel.type !== 'dm';
+    const hasAtAll = /@all\b/i.test(dto.content);
+    
+    // Parse normal mentions
+    let mentionedUserIds = parseMentions(dto.content);
+    
+    // If @all is used in a group channel, mention all members
+    if (hasAtAll && isGroup) {
+      const channelMembers = await prisma.channelMember.findMany({
+        where: { channel_id: channelId },
+        select: { user_id: true },
+      });
+      const memberIds = channelMembers
+        .map((m) => m.user_id)
+        .filter((uid) => uid !== senderId);
+      mentionedUserIds = Array.from(new Set([...mentionedUserIds, ...memberIds]));
+    }
+
+    // ── Emit MENTION_CREATED to mentioned users NOT in the active chat ──
+    const inactiveMentionedUserIds = mentionedUserIds.filter(
+      (uid) => uid !== senderId && !activeUserIds.has(uid)
+    );
+
+    if (inactiveMentionedUserIds.length > 0) {
       const mentionPayload: MentionEvent = {
         messageId: formatted.id,
         channelId,
-        mentionedUserIds,
+        mentionedUserIds: inactiveMentionedUserIds,
       };
-      for (const uid of mentionedUserIds) {
-        if (uid === senderId) continue;
+      for (const uid of inactiveMentionedUserIds) {
         io.to(`user:${uid}`).emit(MessageEvents.MENTION_CREATED, mentionPayload);
       }
     }
-  } catch {
-    console.warn('Socket.io not available, skipping real-time push');
-  }
 
-  // ── Mention notifications (fire-and-forget) ──
-  const mentionedUserIds = parseMentions(dto.content);
-  if (mentionedUserIds.length > 0) {
-    const senderInfo = await prisma.user.findUnique({
-      where: { id: senderId },
-      select: { display_name: true },
-    });
+    // ── Create Database Notifications for Mentions (for those NOT in the active chat) ──
+    if (inactiveMentionedUserIds.length > 0) {
+      const senderInfo = await prisma.user.findUnique({
+        where: { id: senderId },
+        select: { display_name: true },
+      });
 
-    for (const uid of mentionedUserIds) {
-      if (uid === senderId) continue; // don't notify yourself
-      createNotification(
-        uid,
-        'mention',
-        'New Mention',
-        `${senderInfo?.display_name ?? 'Someone'} mentioned you in #${channel.name}`,
-        { messageId: formatted.id, channelId },
-      ).catch(() => {}); // non-blocking
+      for (const uid of inactiveMentionedUserIds) {
+        createNotification(
+          uid,
+          'mention',
+          'New Mention',
+          `${senderInfo?.display_name ?? 'Someone'} mentioned you in #${channel.name}`,
+          { messageId: formatted.id, channelId, workspaceId: channel.workspace_id },
+        ).catch(() => {}); // non-blocking
+      }
     }
-  }
 
-  // ── Quiet notifications on new message if not in chat ──
-  try {
+    // ── Quiet notifications on new message if not in chat ──
     const channelMembers = await prisma.channelMember.findMany({
       where: { channel_id: channelId },
       select: { user_id: true },
     });
-
-    const io = getIO();
-    const activeSockets = await io.in(`channel:${channelId}`).fetchSockets();
-    const activeUserIds = new Set(activeSockets.map((s) => s.handshake.auth?.userId).filter(Boolean));
 
     const senderInfo = await prisma.user.findUnique({
       where: { id: senderId },
@@ -331,7 +358,8 @@ export const createMessage = async (
       const uid = member.user_id;
       if (uid === senderId) continue;
       if (activeUserIds.has(uid)) continue;
-      if (mentionedUserIds.includes(uid)) continue;
+      // Skip if they already received a mention notification
+      if (mentionedUserIds.includes(uid)) continue; 
 
       createNotification(
         uid,
@@ -342,7 +370,7 @@ export const createMessage = async (
       ).catch(() => {});
     }
   } catch (err) {
-    console.error('Error generating off-channel notification:', err);
+    console.error('Error in socket/notification dispatch:', err);
   }
 
   return formatted;
