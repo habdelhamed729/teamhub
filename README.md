@@ -10,6 +10,7 @@ TeamHub is a full-stack monorepo application designed for seamless team coordina
 - **Profile Management**: Customizable display names and premium abstract avatars (DiceBear).
 - **Workspace Coordination**: Secure workspace creation, member management, and unique validation.
 - **Unified Auth**: JWT-based authentication with secure refresh token rotation.
+- **Real-Time Messaging**: Live channel and DM chat with socket-powered delivery, optimistic UI, and cursor-based pagination.
 
 ## 🛠️ Tech Stack
 - **Frontend**: React (Next.js), TanStack Query, Zustand, Tailwind CSS.
@@ -109,7 +110,7 @@ Once running, access the services at:
 | --- | --- | --- | --- |
 | Mazen Raafat | Auth + Workspace + App Shell | Build product foundation | [🔐 Mazen Raafat — Product Foundation](file:///d:/Full-Stack%20Projects/teamhub/docs/Mazen%20Raafat/README.md) |
 | Hassan Muhammad | Members + Roles + Channels | Build collaboration structure | [👥 Hassan Muhammad](file:///d:/Full-Stack%20Projects/teamhub/docs/Hassan_Muhammad/TeamHub_API_Collection.json) |
-| Member 3 | Real-Time Chat + Chat Files | Build live communication | 💬 Member 3 — Real-Time Communication: Chat, Mentions, Chat Files |
+| Moamen Soltan | Real-Time Chat + Chat Files | Build live communication | 💬 Member 3 — Real-Time Communication: Chat, Mentions, Reactions, File Attachments |
 | Member 4 | Boards + Tasks + Task Alerts | Build work management | ✅ Member 4 — Work Management: Boards, Tasks, Comments, Task Alerts |
 | Hassan Abdelhamed (M5) | Documents + Uploads + AI + QA | Build knowledge/files/AI/integration | [🤖 Hassan Abdelhamed — Knowledge, Files, AI, Notifications](file:///d:/Full-Stack%20Projects/teamhub/docs/Hassan%20Abdelhamed/README.md) |
 
