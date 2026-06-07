@@ -21,6 +21,17 @@ export interface Message {
 
   parentMessageId?: string | null;
 
+  parentMessage?: {
+    id: string;
+    content: string;
+    sender: {
+      id: string;
+      display_name: string;
+      avatar_url: string | null;
+    };
+    attachments?: Attachment[];
+  } | null;
+
   attachments: Attachment[];
 
   reactions: Reaction[];

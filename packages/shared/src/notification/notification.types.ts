@@ -1,4 +1,4 @@
-export type NotificationType = 'mention' | 'task_assigned' | 'channel_invite';
+export type NotificationType = 'mention' | 'task_assigned' | 'channel_invite' | 'message';
 
 export interface Notification {
   id: string;

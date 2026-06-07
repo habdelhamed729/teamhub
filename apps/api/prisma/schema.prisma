@@ -36,6 +36,7 @@ enum NotificationType {
   mention
   task_assigned
   channel_invite
+  message
 }
 
 enum MessageType {
@@ -332,5 +333,9 @@ model Attachment {
   @@index([message_id])
   @@index([document_id])
   @@index([task_id])
+}
+
+model alembic_version {
+  version_num String @id @db.VarChar(32)
 }
 

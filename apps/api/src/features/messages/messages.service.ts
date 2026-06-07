@@ -24,6 +24,16 @@ const messageInclude = (viewerId: string) =>
         uploader: { select: senderSelect },
       },
     },
+    parentMessage: {
+      include: {
+        sender: { select: senderSelect },
+        attachments: {
+          include: {
+            uploader: { select: senderSelect },
+          },
+        },
+      },
+    },
     _count: { select: { replies: true } },
   }) as const;
 
@@ -120,6 +130,12 @@ const formatMessage = (raw: any, viewerId: string) => {
     content: raw.content,
     messageType: raw.messageType,
     parentMessageId: raw.parentMessageId ?? null,
+    parentMessage: raw.parentMessage ? {
+      id: raw.parentMessage.id,
+      content: raw.parentMessage.content,
+      sender: raw.parentMessage.sender,
+      attachments: raw.parentMessage.attachments ?? [],
+    } : null,
     attachments,
     reactions,
     replyCount: raw._count?.replies ?? 0,
@@ -145,7 +161,6 @@ export const listMessages = async (
   const messages = await prisma.message.findMany({
     where: {
       channelId,
-      parentMessageId: null, // top-level messages only
       deletedAt: null,
     },
     include: messageInclude(userId),
@@ -181,6 +196,13 @@ export const createMessage = async (
     attachmentIds?: string[];
   },
 ) => {
+  if (!dto.content?.trim() && (!dto.attachmentIds || dto.attachmentIds.length === 0)) {
+    throw Object.assign(
+      new Error('Message must contain either text content or at least one attachment'),
+      { status: 400 }
+    );
+  }
+
   const channel = await assertChannelAccess(channelId, senderId);
 
   // Determine message type
@@ -283,6 +305,44 @@ export const createMessage = async (
         { messageId: formatted.id, channelId },
       ).catch(() => {}); // non-blocking
     }
+  }
+
+  // ── Quiet notifications on new message if not in chat ──
+  try {
+    const channelMembers = await prisma.channelMember.findMany({
+      where: { channel_id: channelId },
+      select: { user_id: true },
+    });
+
+    const io = getIO();
+    const activeSockets = await io.in(`channel:${channelId}`).fetchSockets();
+    const activeUserIds = new Set(activeSockets.map((s) => s.handshake.auth?.userId).filter(Boolean));
+
+    const senderInfo = await prisma.user.findUnique({
+      where: { id: senderId },
+      select: { display_name: true },
+    });
+
+    const isDm = channel.type === 'dm';
+    const notificationTitle = isDm ? 'New Message' : `New message in #${channel.name}`;
+    const notificationBody = `${senderInfo?.display_name ?? 'Someone'}: ${formatted.content || 'sent an attachment'}`;
+
+    for (const member of channelMembers) {
+      const uid = member.user_id;
+      if (uid === senderId) continue;
+      if (activeUserIds.has(uid)) continue;
+      if (mentionedUserIds.includes(uid)) continue;
+
+      createNotification(
+        uid,
+        'message',
+        notificationTitle,
+        notificationBody,
+        { workspaceId: channel.workspace_id, channelId },
+      ).catch(() => {});
+    }
+  } catch (err) {
+    console.error('Error generating off-channel notification:', err);
   }
 
   return formatted;

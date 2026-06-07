@@ -22,8 +22,9 @@ export const useSendMessage = (channelId: string) => {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
 
-  return useMutation<Message, Error, { content: string; parentMessageId?: string; attachmentIds?: string[] }>({
-    mutationFn: (dto) => MessagesAPI.sendMessage(channelId, dto),
+  return useMutation<Message, Error, { content: string; parentMessageId?: string; parentMessage?: Pick<Message, 'id' | 'content' | 'sender' | 'attachments'> | null; attachmentIds?: string[] }>({
+    mutationFn: ({ content, parentMessageId, attachmentIds }) =>
+      MessagesAPI.sendMessage(channelId, { content, parentMessageId, attachmentIds }),
     onMutate: async (newMsg) => {
       const queryKey = ['messages', channelId];
       await queryClient.cancelQueries({ queryKey });
@@ -37,8 +38,10 @@ export const useSendMessage = (channelId: string) => {
           channelId,
           sender: currentUser,
           content: newMsg.content,
-          messageType: 'text' as MessageType, // Use lowercase to match Prisma enum
+          messageType: 'text' as MessageType,
           parentMessageId: newMsg.parentMessageId ?? null,
+          // Embed parent message so ReplyPreview renders immediately
+          parentMessage: newMsg.parentMessage ?? null,
           attachments: [],
           reactions: [],
           replyCount: 0,

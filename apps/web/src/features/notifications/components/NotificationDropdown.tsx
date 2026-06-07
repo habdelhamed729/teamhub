@@ -63,6 +63,8 @@ export const NotificationDropdown = () => {
     switch (type) {
       case "mention":
         return <MessageSquare className="h-4 w-4 text-purple-400" />;
+      case "message":
+        return <MessageSquare className="h-4 w-4 text-sky-400" />;
       case "channel_invite":
         return <UserPlus className="h-4 w-4 text-emerald-400" />;
       default:
