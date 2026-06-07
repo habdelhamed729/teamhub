@@ -47,7 +47,7 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
   const typeLabel = getFileTypeLabel(attachment.file_type, ext);
   const isImage = attachment.file_type.startsWith('image/');
 
-  const bgClass = isOwn ? 'bg-[#317268]' : 'bg-[#B8B9BA]';
+  const bgClass = isOwn ? 'bg-[#276259]' : 'bg-[#4f4f4f]';
 
   return (
     <a
@@ -58,7 +58,7 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
     >
       {/* Image thumbnail area */}
       {isImage && (
-        <div className="w-full h-[100px] overflow-hidden">
+        <div className="w-full min-w-[200px] h-[100px] overflow-hidden">
           <img
             src={attachment.url}
             alt={attachment.file_name}

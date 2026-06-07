@@ -56,7 +56,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       parts.push(
         <span 
           key={`mention-${userId}-${matchIndex}`} 
-          className="font-semibold text-emerald-700 bg-primary-accent/30 px-1 py-0.5 rounded text-[15px]"
+          className={`font-semibold   px-1 py-0.5 rounded text-[15px] ${isOwn ? 'text-[#005548]' : 'text-emerald-500'}`}
         >
           @{name}
         </span>
@@ -83,7 +83,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         allParts.push(
           <span 
             key={`all-${matchIndex}`} 
-            className="font-semibold text-emerald-700 bg-primary-accent/30 px-1 py-0.5 rounded text-[15px]"
+            className={`font-semibold   px-1 py-0.5 rounded text-[15px] ${isOwn ? 'text-[#005548]' : 'text-emerald-500'}`}
           >
             @all
           </span>
@@ -114,7 +114,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         allParts.push(
           <span 
             key={`all-${idx}-${matchIndex}`} 
-            className="font-semibold text-emerald-700 bg-primary-accent/30 px-1 py-0.5 rounded text-[15px]"
+            className={`font-semibold   px-1 py-0.5 rounded text-[15px] ${isOwn ? 'text-[#005548]' : 'text-emerald-500'}`}
           >
             @all
           </span>
@@ -223,7 +223,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             className={`w-fit max-w-full whitespace-pre-wrap break-words rounded-2xl px-4 py-3 flex flex-col gap-2 shadow-sm border transition-all duration-200 ${
               isOwn
                 ? `${isHovered ? 'bg-[#317268] border-[#317268]' : 'bg-msg-own-bg border-[#3B8E81]'} text-white rounded-br-none`
-                : `${isHovered ? 'bg-[#F2F4F5] border-[#D1D2D4]' : 'bg-msg-other-bg border-[#E8E8E9]'} text-[#1E1E1E] rounded-bl-none`
+                : `${isHovered ? 'bg-[#2D3135] border-[#383838]' : 'bg-[#282b30] border-[#2F3337]'} text-white rounded-bl-none`
             }`}
           >
             {/* 1. Reply Preview block inside bubble */}
