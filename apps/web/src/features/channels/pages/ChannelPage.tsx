@@ -114,6 +114,7 @@ export const ChannelPage: React.FC = () => {
           channelId={channelId!}
           onReply={(msg) => setReplyingTo(msg)}
           channelType={channel?.type}
+          members={members}
         />
 
         {/* Composer area */}
@@ -123,6 +124,8 @@ export const ChannelPage: React.FC = () => {
             channelId={channelId!}
             replyingTo={replyingTo}
             onCancelReply={() => setReplyingTo(null)}
+            workspaceId={workspaceId}
+            channelType={channel?.type}
           />
         </div>
       </div>
