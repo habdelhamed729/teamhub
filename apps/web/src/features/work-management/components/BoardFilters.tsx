@@ -2,6 +2,8 @@ import { X, Search } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 import type { DueFilter, PriorityFilter, AssigneeFilter } from '../hooks/useBoardTaskFilters';
 import { useMembers } from '@/features/members/hooks/useMembers';
+import { WorkSelect, type WorkSelectOption } from './WorkSelect';
+import { useMemo } from 'react';
 
 interface BoardFiltersProps {
   filters: {
@@ -24,8 +26,43 @@ interface BoardFiltersProps {
 export const BoardFilters = ({ filters, setFilters, activeFilterCount, clearFilters, workspaceId }: BoardFiltersProps) => {
   const { data: members } = useMembers(workspaceId);
 
+  const priorityOptions: WorkSelectOption<PriorityFilter>[] = [
+    { value: 'all', label: 'Any Priority' },
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+    { value: 'urgent', label: 'Urgent' },
+  ];
+
+  const dueOptions: WorkSelectOption<DueFilter>[] = [
+    { value: 'all', label: 'Any Date' },
+    { value: 'overdue', label: 'Overdue' },
+    { value: 'today', label: 'Today' },
+    { value: 'this_week', label: 'This Week' },
+    { value: 'no_due', label: 'No Date' },
+  ];
+
+  const assigneeOptions: WorkSelectOption<AssigneeFilter>[] = useMemo(() => {
+    const baseOptions: WorkSelectOption<AssigneeFilter>[] = [
+      { value: 'all', label: 'Any Assignee' },
+      { value: 'me', label: 'Assigned to Me' },
+      { value: 'unassigned', label: 'Unassigned' },
+    ];
+
+    if (members) {
+      members.forEach(m => {
+        baseOptions.push({
+          value: m.user_id,
+          label: m.user.display_name,
+        });
+      });
+    }
+
+    return baseOptions;
+  }, [members]);
+
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-3 bg-surface-secondary/20 p-3 rounded-2xl border border-white/5 w-full overflow-x-auto scrollbar-none">
+    <div className="flex flex-col sm:flex-row items-center gap-3 bg-surface-secondary/20 p-3 rounded-2xl border border-white/5 w-full overflow-x-auto scrollbar-none z-40">
       <div className="relative w-full sm:w-64 shrink-0">
         <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
         <input
@@ -37,43 +74,32 @@ export const BoardFilters = ({ filters, setFilters, activeFilterCount, clearFilt
         />
       </div>
 
-      <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-none shrink-0">
-        <select
-          value={filters.priority}
-          onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value as PriorityFilter }))}
-          className="bg-surface-elevated/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-text-secondary focus:outline-none focus:ring-1 focus:ring-primary-accent/50 cursor-pointer appearance-none min-w-[110px]"
-        >
-          <option value="all">Any Priority</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="urgent">Urgent</option>
-        </select>
+      <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-visible shrink-0">
+        <div className="min-w-[140px]">
+          <WorkSelect<PriorityFilter>
+            value={filters.priority}
+            onChange={(val) => setFilters(prev => ({ ...prev, priority: val }))}
+            options={priorityOptions}
+          />
+        </div>
 
-        <select
-          value={filters.due}
-          onChange={(e) => setFilters(prev => ({ ...prev, due: e.target.value as DueFilter }))}
-          className="bg-surface-elevated/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-text-secondary focus:outline-none focus:ring-1 focus:ring-primary-accent/50 cursor-pointer appearance-none min-w-[110px]"
-        >
-          <option value="all">Any Date</option>
-          <option value="overdue">Overdue</option>
-          <option value="today">Today</option>
-          <option value="this_week">This Week</option>
-          <option value="no_due">No Date</option>
-        </select>
+        <div className="min-w-[140px]">
+          <WorkSelect<DueFilter>
+            value={filters.due}
+            onChange={(val) => setFilters(prev => ({ ...prev, due: val }))}
+            options={dueOptions}
+          />
+        </div>
 
-        <select
-          value={filters.assignee}
-          onChange={(e) => setFilters(prev => ({ ...prev, assignee: e.target.value as AssigneeFilter }))}
-          className="bg-surface-elevated/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-text-secondary focus:outline-none focus:ring-1 focus:ring-primary-accent/50 cursor-pointer appearance-none min-w-[130px]"
-        >
-          <option value="all">Any Assignee</option>
-          <option value="me">Assigned to Me</option>
-          <option value="unassigned">Unassigned</option>
-          {members?.map(m => (
-            <option key={m.user_id} value={m.user_id}>{m.user.display_name}</option>
-          ))}
-        </select>
+        <div className="min-w-[160px]">
+          <WorkSelect<AssigneeFilter>
+            value={filters.assignee}
+            onChange={(val) => setFilters(prev => ({ ...prev, assignee: val }))}
+            options={assigneeOptions}
+            searchable
+            searchPlaceholder="Find member..."
+          />
+        </div>
 
         {activeFilterCount > 0 && (
           <Button

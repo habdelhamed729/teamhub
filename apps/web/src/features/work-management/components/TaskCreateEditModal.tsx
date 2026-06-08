@@ -6,15 +6,24 @@ import type { TaskDTO, TaskPriority } from '@teamhub/shared';
 import { useMembers } from '@/features/members/hooks/useMembers';
 import type { TaskFormValues } from '../utils/workManagementPayloads';
 
-interface TaskCreateEditModalProps {
+import { WorkSelect, type WorkSelectOption } from './WorkSelect';
+
+export interface TaskCreateEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: TaskFormValues) => void;
-  isLoading?: boolean;
+  isLoading: boolean;
   initialData?: TaskDTO;
   workspaceId: string;
   title: string;
 }
+
+const priorityOptions: WorkSelectOption<TaskPriority>[] = [
+  { value: 'low', label: 'Low Priority' },
+  { value: 'medium', label: 'Medium Priority' },
+  { value: 'high', label: 'High Priority' },
+  { value: 'urgent', label: 'Urgent' },
+];
 
 export const TaskCreateEditModal = ({
   isOpen,
@@ -124,22 +133,14 @@ export const TaskCreateEditModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2.5">
               <label className="text-sm font-semibold text-text-secondary ml-1">Priority</label>
-              <div className="relative">
-                <select
-                  className="w-full appearance-none bg-surface-secondary border border-white/5 rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-accent/50 transition-all cursor-pointer"
-                  value={formData.priority}
-                  onChange={e => setFormData(prev => ({ ...prev, priority: e.target.value as TaskPriority }))}
-                  disabled={isLoading}
-                >
-                  <option value="low">Low Priority</option>
-                  <option value="medium">Medium Priority</option>
-                  <option value="high">High Priority</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                </div>
-              </div>
+              <WorkSelect<TaskPriority>
+                value={formData.priority}
+                onChange={(val) => {
+                  setFormData(prev => ({ ...prev, priority: val }));
+                }}
+                options={priorityOptions}
+                disabled={isLoading}
+              />
             </div>
 
             <div className="space-y-2.5">
