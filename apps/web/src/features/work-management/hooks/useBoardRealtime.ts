@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSocket } from '@/shared/services/socket';
 import { 
@@ -9,11 +9,24 @@ import type {
   BoardDetailDTO 
 } from '@teamhub/shared';
 import { workManagementQueryKeys } from '../utils/workManagementQueryKeys';
-import { toast } from 'sonner';
 
 export const useBoardRealtime = (boardId: string) => {
   const queryClient = useQueryClient();
   const socket = getSocket();
+  const [isConnected, setIsConnected] = useState(socket.connected);
+
+  useEffect(() => {
+    const handleConnect = () => setIsConnected(true);
+    const handleDisconnect = () => setIsConnected(false);
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+    };
+  }, [socket]);
 
   useEffect(() => {
     if (!boardId) return;
@@ -96,8 +109,6 @@ export const useBoardRealtime = (boardId: string) => {
           };
         }
       );
-      
-      toast.info('A task was deleted by another user');
     };
 
     // ── TASK_COMMENT_CREATED ──────────────────────────────────
@@ -122,4 +133,6 @@ export const useBoardRealtime = (boardId: string) => {
       socket.emit(WorkManagementEvents.LEAVE_BOARD, boardId);
     };
   }, [boardId, queryClient, socket]);
+
+  return { isConnected };
 };

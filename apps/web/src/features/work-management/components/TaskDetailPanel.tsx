@@ -1,18 +1,24 @@
-import type { TaskDTO } from '@teamhub/shared';
+import type { TaskDTO, BoardColumnDTO } from '@teamhub/shared';
 import { Button } from '@/shared/components/Button';
-import { X, Clock, Calendar, User as UserIcon, Trash2, Edit2 } from 'lucide-react';
+import { X, Clock, Calendar, User as UserIcon, Trash2, Edit2, ArrowRightLeft } from 'lucide-react';
 import { TaskPriorityBadge } from './TaskPriorityBadge';
 import { TaskAssigneeAvatar } from './TaskAssigneeAvatar';
 import { TaskComments } from './TaskComments';
+import { useState } from 'react';
 
 interface TaskDetailPanelProps {
   task: TaskDTO;
+  columns: BoardColumnDTO[];
   onClose: () => void;
   onEdit: (task: TaskDTO) => void;
   onDelete: (taskId: string) => void;
+  onMove: (taskId: string, targetColumnId: string) => void;
+  isMoving?: boolean;
 }
 
-export const TaskDetailPanel = ({ task, onClose, onEdit, onDelete }: TaskDetailPanelProps) => {
+export const TaskDetailPanel = ({ task, columns, onClose, onEdit, onDelete, onMove, isMoving }: TaskDetailPanelProps) => {
+  const [showMoveMenu, setShowMoveMenu] = useState(false);
+
   return (
     <>
       {/* Backdrop for mobile/tablet */}
@@ -29,6 +35,45 @@ export const TaskDetailPanel = ({ task, onClose, onEdit, onDelete }: TaskDetailP
             <h2 className="text-xs font-bold text-text-muted uppercase tracking-widest">Task Details</h2>
           </div>
           <div className="flex items-center gap-1.5">
+            <div className="relative">
+              <Button
+                variant="ghost"
+                iconOnly
+                size="sm"
+                onClick={() => setShowMoveMenu(!showMoveMenu)}
+                icon={<ArrowRightLeft className="w-4 h-4" />}
+                className={`text-text-muted hover:text-primary-accent hover:bg-primary-accent/5 ${showMoveMenu ? 'bg-primary-accent/10 text-primary-accent' : ''}`}
+                isLoading={isMoving}
+              />
+              {showMoveMenu && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-surface-elevated border border-white/10 rounded-xl shadow-premium z-50 py-1 animate-zoom-in">
+                  <div className="px-3 py-2 border-b border-white/5">
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Move to...</span>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto scrollbar-thin">
+                    {columns.map(col => (
+                      <button
+                        key={col.id}
+                        disabled={col.id === task.columnId}
+                        onClick={() => {
+                          if (col.id !== task.columnId) {
+                            onMove(task.id, col.id);
+                            setShowMoveMenu(false);
+                          }
+                        }}
+                        className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                          col.id === task.columnId 
+                            ? 'text-primary-accent bg-primary-accent/5 font-bold cursor-default'
+                            : 'text-text-secondary hover:text-text-primary hover:bg-white/5 cursor-pointer'
+                        }`}
+                      >
+                        {col.name} {col.id === task.columnId && '(Current)'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <Button
               variant="ghost"
               iconOnly

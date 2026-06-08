@@ -6,10 +6,11 @@ import { TaskCard } from './TaskCard';
 
 interface BoardDragDropProviderProps {
   board: BoardDetailDTO;
+  disabled?: boolean;
   children: React.ReactNode;
 }
 
-export const BoardDragDropProvider = ({ board, children }: BoardDragDropProviderProps) => {
+export const BoardDragDropProvider = ({ board, disabled, children }: BoardDragDropProviderProps) => {
   const { 
     activeTask, 
     sensors, 
@@ -20,7 +21,7 @@ export const BoardDragDropProvider = ({ board, children }: BoardDragDropProvider
 
   return (
     <DndContext
-      sensors={sensors}
+      sensors={disabled ? [] : sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
