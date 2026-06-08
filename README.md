@@ -111,7 +111,7 @@ Once running, access the services at:
 | Mazen Raafat | Auth + Workspace + App Shell | Build product foundation | [🔐 Mazen Raafat — Product Foundation](file:///d:/Full-Stack%20Projects/teamhub/docs/Mazen%20Raafat/README.md) |
 | Hassan Muhammad | Members + Roles + Channels | Build collaboration structure | [👥 Hassan Muhammad](file:///d:/Full-Stack%20Projects/teamhub/docs/Hassan_Muhammad/TeamHub_API_Collection.json) |
 | Moamen Soltan | Real-Time Chat + Chat Files | Build live communication | Real-Time Communication: Chat, Mentions, Reactions, File Attachments |
-| Member 4 | Boards + Tasks + Task Alerts | Build work management | ✅ Member 4 — Work Management: Boards, Tasks, Comments, Task Alerts |
+| Shawky Elsayed | Boards + Tasks + Task Alerts | Build work management | ✅ Shawky Elsayed — Work Management: Boards, Tasks, Comments, Task Alerts |
 | Hassan Abdelhamed (M5) | Documents + Uploads + AI + QA | Build knowledge/files/AI/integration | [🤖 Hassan Abdelhamed — Knowledge, Files, AI, Notifications](file:///d:/Full-Stack%20Projects/teamhub/docs/Hassan%20Abdelhamed/README.md) |
 
 ## 🛠️ Database Management
