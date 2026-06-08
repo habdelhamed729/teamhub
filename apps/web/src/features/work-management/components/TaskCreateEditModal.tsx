@@ -4,17 +4,12 @@ import { Input } from '@/shared/components/Input';
 import { X, User as UserIcon } from 'lucide-react';
 import type { TaskDTO, TaskPriority } from '@teamhub/shared';
 import { useMembers } from '@/features/members/hooks/useMembers';
+import type { TaskFormValues } from '../utils/workManagementPayloads';
 
 interface TaskCreateEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: {
-    title: string;
-    description: string;
-    priority: TaskPriority;
-    dueDate: string | null;
-    assigneeIds: string[];
-  }) => void;
+  onSave: (data: TaskFormValues) => void;
   isLoading?: boolean;
   initialData?: TaskDTO;
   workspaceId: string;
@@ -30,12 +25,12 @@ export const TaskCreateEditModal = ({
   workspaceId,
   title,
 }: TaskCreateEditModalProps) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TaskFormValues>({
     title: initialData?.title || '',
     description: initialData?.description || '',
     priority: (initialData?.priority || 'medium') as TaskPriority,
-    dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '',
-    assigneeIds: initialData?.assignees.map(a => a.userId) || [] as string[],
+    dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : null,
+    assigneeIds: initialData?.assignees.map(a => a.userId) || [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -47,17 +42,25 @@ export const TaskCreateEditModal = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
-    if (!formData.title.trim()) newErrors.title = 'Title is required';
+    
+    const sanitizedTitle = formData.title.trim();
+    if (!sanitizedTitle) {
+      newErrors.title = 'Title is required';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    onSave({
+    // Convert local date string back to ISO for API, or keep null
+    const finalData: TaskFormValues = {
       ...formData,
+      title: sanitizedTitle,
       dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
-    });
+    };
+
+    onSave(finalData);
   };
 
   const toggleAssignee = (userId: string) => {
@@ -125,8 +128,8 @@ export const TaskCreateEditModal = ({
                 <input
                   type="date"
                   className="w-full bg-surface-secondary border border-white/5 rounded-lg px-3 py-2.5 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-accent/50 transition-all cursor-pointer"
-                  value={formData.dueDate}
-                  onChange={e => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+                  value={formData.dueDate || ''}
+                  onChange={e => setFormData(prev => ({ ...prev, dueDate: e.target.value || null }))}
                   disabled={isLoading}
                 />
               </div>

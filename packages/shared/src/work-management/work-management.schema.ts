@@ -52,6 +52,7 @@ export const updateTaskSchema = z.object({
   description: z.string().max(2000).optional(),
   priority: taskPrioritySchema.optional(),
   dueDate: z.string().datetime().nullable().optional(),
+  assigneeIds: z.array(userIdSchema).optional(),
 });
 
 export const moveTaskSchema = z.object({

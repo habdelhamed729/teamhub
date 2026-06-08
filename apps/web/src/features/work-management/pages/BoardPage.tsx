@@ -14,6 +14,8 @@ import { ChevronLeft, Plus, Settings } from 'lucide-react';
 import type { TaskDTO, BoardColumnDTO } from '@teamhub/shared';
 import { BoardDragDropProvider } from '../components/BoardDragDropProvider';
 import { useBoardRealtime } from '../hooks/useBoardRealtime';
+import { buildCreateTaskPayload, buildUpdateTaskPayload } from '../utils/workManagementPayloads';
+import { toast } from 'sonner';
 
 export const BoardPage = () => {
   const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>();
@@ -166,11 +168,19 @@ export const BoardPage = () => {
         isLoading={createTask.isPending || updateTask.isPending}
         onSave={(data) => {
           if (editingTask) {
-            updateTask.mutate({ taskId: editingTask.id, payload: data }, {
+            const payload = buildUpdateTaskPayload(data);
+            updateTask.mutate({ taskId: editingTask.id, payload }, {
               onSuccess: () => setIsTaskModalOpen(false)
             });
           } else if (targetColumnId) {
-            createTask.mutate({ columnId: targetColumnId, payload: data }, {
+            const payload = buildCreateTaskPayload(targetColumnId, data);
+            
+            if (!payload.columnId) {
+              toast.error("Please select a column");
+              return;
+            }
+
+            createTask.mutate({ columnId: targetColumnId, payload }, {
               onSuccess: () => setIsTaskModalOpen(false)
             });
           }
