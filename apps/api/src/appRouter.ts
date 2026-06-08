@@ -9,6 +9,7 @@ import { messagesRouter } from './features/messages/messages.routes';
 import { documentsRouter } from './features/documents/documents.routes';
 import { attachmentsRouter } from './features/attachments/attachments.routes';
 import { aiRouter } from './features/ai/ai.routes';
+import { workManagementRouter } from './features/work-management/work-management.routes';
 
 const appRouter = Router();
 
@@ -16,6 +17,7 @@ appRouter.use('/auth', authRouter);
 appRouter.use('/workspaces', workspaceRouter);
 appRouter.use('/users', userRouter);
 appRouter.use('/workspaces', membersRouter);
+appRouter.use('/', workManagementRouter);
 // messagesRouter must be registered before channelsRouter — both match /channels/:id/messages
 appRouter.use('/channels', messagesRouter);
 appRouter.use('/channels', channelsRouter);

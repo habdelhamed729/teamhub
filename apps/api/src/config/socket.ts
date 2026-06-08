@@ -1,6 +1,6 @@
 import { Server as HTTPServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { MessageEvents } from '@teamhub/shared';
+import { MessageEvents, WorkManagementEvents, WorkManagementRooms } from '@teamhub/shared';
 
 let io: Server | null = null;
 
@@ -28,11 +28,20 @@ export const initSocket = (server: HTTPServer) => {
 
     // ── Channel room management ────────────────────────────────
     socket.on(MessageEvents.JOIN_CHANNEL, (channelId: string) => {
-      socket.join(`channel:${channelId}`);
+      if (channelId) socket.join(`channel:${channelId}`);
     });
 
     socket.on(MessageEvents.LEAVE_CHANNEL, (channelId: string) => {
-      socket.leave(`channel:${channelId}`);
+      if (channelId) socket.leave(`channel:${channelId}`);
+    });
+
+    // ── Board room management ──────────────────────────────────
+    socket.on(WorkManagementEvents.JOIN_BOARD, (boardId: string) => {
+      if (boardId) socket.join(WorkManagementRooms.board(boardId));
+    });
+
+    socket.on(WorkManagementEvents.LEAVE_BOARD, (boardId: string) => {
+      if (boardId) socket.leave(WorkManagementRooms.board(boardId));
     });
 
     // ── Typing indicator ───────────────────────────────────────

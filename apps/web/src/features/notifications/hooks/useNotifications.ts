@@ -4,6 +4,7 @@ import { getNotifications, markAsRead, markAllAsRead } from '../api/notification
 import { getSocket, connectSocket, disconnectSocket } from '@/shared/services/socket';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/app/store/useAuthStore';
+import { NotificationEvents } from '@teamhub/shared';
 import type { Notification } from '@teamhub/shared';
 
 export const useNotifications = () => {
@@ -72,10 +73,10 @@ export const useNotifications = () => {
       });
     };
 
-    socket.on('NOTIFICATION_RECEIVED', handleNewNotification);
+    socket.on(NotificationEvents.NOTIFICATION_RECEIVED, handleNewNotification);
 
     return () => {
-      socket.off('NOTIFICATION_RECEIVED', handleNewNotification);
+      socket.off(NotificationEvents.NOTIFICATION_RECEIVED, handleNewNotification);
     };
   }, [isAuthenticated, user?.id, refetch]);
 

@@ -17,7 +17,6 @@ import {
   ChevronDown,
   Check,
   Search,
-  Sparkles,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import type {Channel} from '@teamhub/shared';

@@ -2,9 +2,11 @@ export * from "./auth";
 export * from "./workspace";
 export * from "./channel/channel.types";
 export * from "./channel/channel.schema";
-export * from "./notification/notification.types";
+export * from "./notification";
 export * from "./document/document.types";
 export * from "./document/document.schema";
 export * from "./attachment/attachment.types";
 export * from "./attachment/attachment.schema";
-export * from "./messages"
+export * from "./messages";
+export * from "./work-management";
+

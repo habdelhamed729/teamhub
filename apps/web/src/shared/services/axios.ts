@@ -3,7 +3,7 @@ import { useAuthStore } from "@/app/store/useAuthStore";
 import { refresh } from "@/features/auth/api/auth.api";
 
 export const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
   withCredentials: true, //hena bn3ml send ll cookies m3a kol request
 });
 
