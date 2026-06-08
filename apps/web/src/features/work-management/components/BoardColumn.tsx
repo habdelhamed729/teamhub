@@ -27,17 +27,17 @@ export const BoardColumn = ({ column, onAddTask, onTaskClick, onEditColumn }: Bo
   return (
     <div 
       ref={setNodeRef}
-      className={`w-80 shrink-0 flex flex-col max-h-full bg-surface-secondary/40 rounded-2xl border transition-all duration-200 shadow-sm overflow-hidden ${
-        isOver ? 'border-primary-accent/30 bg-primary-accent/5' : 'border-white/5'
+      className={`w-[85vw] sm:w-80 shrink-0 flex flex-col max-h-full bg-surface-secondary/30 rounded-3xl border transition-all duration-300 shadow-sm overflow-hidden ${
+        isOver ? 'border-primary-accent/40 bg-primary-accent/5 scale-[1.01]' : 'border-white/5'
       }`}
     >
       {/* Column Header */}
-      <div className="px-4 py-4 flex items-center justify-between border-b border-white/5 bg-surface-elevated/20">
-        <div className="flex items-center gap-2 overflow-hidden">
-          <h3 className="text-xs font-bold text-text-primary uppercase tracking-widest truncate">
+      <div className="px-5 py-4 flex items-center justify-between border-b border-white/5 bg-surface-elevated/10 backdrop-blur-sm">
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <h3 className="text-[11px] font-bold text-text-primary uppercase tracking-[0.1em] truncate">
             {column.name}
           </h3>
-          <span className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-bold text-text-muted">
+          <span className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/5 text-[10px] font-bold text-text-muted">
             {column.tasks.length}
           </span>
         </div>
@@ -47,32 +47,43 @@ export const BoardColumn = ({ column, onAddTask, onTaskClick, onEditColumn }: Bo
           size="sm"
           onClick={() => onEditColumn(column)}
           icon={<MoreHorizontal className="w-4 h-4" />}
-          className="text-text-muted hover:text-text-primary"
+          className="text-text-muted hover:text-text-primary hover:bg-white/5 rounded-lg"
         />
       </div>
 
       {/* Tasks List */}
-      <div className="flex-1 overflow-y-auto p-3 min-h-[100px] scrollbar-thin scrollbar-thumb-white/5">
+      <div className="flex-1 overflow-y-auto p-4 min-h-[150px] scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20 transition-all">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          {column.tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onClick={onTaskClick} />
-          ))}
-        </SortableContext>
-        
-        {column.tasks.length === 0 && (
-          <div className="border-2 border-dashed border-white/5 rounded-xl h-24 flex items-center justify-center text-text-muted text-[10px] uppercase font-bold tracking-widest">
-            Empty
+          <div className="flex flex-col min-h-full">
+            {column.tasks.map((task) => (
+              <TaskCard key={task.id} task={task} onClick={onTaskClick} />
+            ))}
+            
+            {column.tasks.length === 0 && (
+              <div className="flex-1 border-2 border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center text-text-muted p-8 text-center group hover:border-white/10 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Plus className="w-5 h-5 opacity-40" />
+                </div>
+                <p className="text-[10px] uppercase font-bold tracking-widest opacity-60">No tasks yet</p>
+                <button 
+                  onClick={() => onAddTask(column.id)}
+                  className="mt-4 text-[10px] font-bold text-primary-accent hover:underline uppercase tracking-widest"
+                >
+                  Create Task
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </SortableContext>
       </div>
 
       {/* Column Footer */}
-      <div className="p-2 border-t border-white/5">
+      <div className="p-3 border-t border-white/5 bg-surface-elevated/5">
         <Button
           variant="ghost"
-          className="w-full justify-start text-xs font-bold text-text-muted hover:text-primary-accent hover:bg-primary-accent/5 rounded-xl transition-all"
+          className="w-full justify-start text-[11px] font-bold text-text-muted hover:text-primary-accent hover:bg-primary-accent/5 rounded-xl transition-all h-10 px-4 group"
           onClick={() => onAddTask(column.id)}
-          icon={<Plus className="w-3.5 h-3.5" />}
+          icon={<Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />}
         >
           Add Task
         </Button>

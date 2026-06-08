@@ -60,10 +60,14 @@ export const BoardPage = () => {
   if (isLoading) return <BoardDetailSkeleton />;
   if (isError || !board) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <h2 className="text-xl font-bold text-text-primary mb-4">Board not found</h2>
+      <div className="flex flex-col items-center justify-center h-[80vh] text-center p-8 animate-fade-in">
+        <div className="w-16 h-16 rounded-3xl bg-surface-secondary flex items-center justify-center mb-6 border border-white/5 shadow-xl">
+          <Settings className="w-8 h-8 text-text-muted opacity-40 animate-spin-slow" />
+        </div>
+        <h2 className="text-xl font-bold text-text-primary mb-2">Board not found</h2>
+        <p className="text-sm text-text-muted mb-8 max-w-xs">The board you are looking for might have been deleted or moved.</p>
         <Link to={`/workspaces/${workspaceId}/tasks`}>
-          <Button variant="secondary" icon={<ChevronLeft className="w-4 h-4" />}>
+          <Button variant="secondary" icon={<ChevronLeft className="w-4 h-4" />} className="rounded-xl">
             Back to Boards
           </Button>
         </Link>
@@ -74,31 +78,33 @@ export const BoardPage = () => {
   return (
     <div className="flex flex-col h-full bg-main-bg overflow-hidden animate-fade-in">
       {/* Board Header */}
-      <header className="px-6 py-4 flex items-center justify-between border-b border-white/5 bg-surface-secondary/20">
+      <header className="px-4 sm:px-8 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 bg-surface-secondary/10 backdrop-blur-md sticky top-0 z-30">
         <div className="flex items-center gap-4 overflow-hidden">
           <Link to={`/workspaces/${workspaceId}/tasks`}>
-            <Button variant="ghost" iconOnly size="sm" icon={<ChevronLeft className="w-5 h-5" />} />
+            <Button variant="ghost" iconOnly size="sm" icon={<ChevronLeft className="w-5 h-5" />} className="rounded-lg hover:bg-white/5" />
           </Link>
           <div className="overflow-hidden">
-            <h1 className="text-lg font-bold text-text-primary truncate">{board.name}</h1>
-            {board.description && <p className="text-xs text-text-muted truncate">{board.description}</p>}
+            <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate tracking-tight">{board.name}</h1>
+            {board.description && <p className="text-xs text-text-muted truncate mt-0.5 opacity-80">{board.description}</p>}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Button
-            variant="secondary"
+            variant="ghost"
             size="sm"
             icon={<Settings className="w-4 h-4" />}
             onClick={() => setIsBoardSettingsOpen(true)}
+            className="rounded-xl text-text-muted hover:text-text-primary hover:bg-white/5 h-9"
           >
-            Board Settings
+            Settings
           </Button>
           <Button
             variant="primary"
             size="sm"
             icon={<Plus className="w-4 h-4" />}
             onClick={() => setIsColumnModalOpen(true)}
+            className="rounded-xl h-9 shadow-lg shadow-primary-accent/10"
           >
             Add Column
           </Button>
@@ -106,9 +112,9 @@ export const BoardPage = () => {
       </header>
 
       {/* Columns Container */}
-      <main className="flex-1 overflow-x-auto overflow-y-hidden p-6">
+      <main className="flex-1 overflow-x-auto overflow-y-hidden p-4 sm:p-8 scrollbar-thin scrollbar-thumb-white/10">
         <BoardDragDropProvider board={board}>
-          <div className="flex gap-6 h-full items-start">
+          <div className="flex gap-6 h-full items-start pb-4">
             {board.columns.map((column) => (
               <BoardColumn
                 key={column.id}
@@ -132,29 +138,31 @@ export const BoardPage = () => {
                 setEditingColumn(undefined);
                 setIsColumnModalOpen(true);
               }}
-              className="w-80 shrink-0 h-14 rounded-2xl border-2 border-dashed border-white/5 flex items-center justify-center gap-2 text-text-muted hover:text-primary-accent hover:border-primary-accent/30 hover:bg-primary-accent/5 transition-all group"
+              className="w-[85vw] sm:w-80 shrink-0 h-16 rounded-3xl border-2 border-dashed border-white/5 flex items-center justify-center gap-3 text-text-muted hover:text-primary-accent hover:border-primary-accent/40 hover:bg-primary-accent/5 transition-all group shadow-sm active:scale-95"
             >
-              <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-bold uppercase tracking-widest">New Column</span>
+              <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary-accent group-hover:text-main-bg transition-colors">
+                <Plus className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+              </div>
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em]">New Column</span>
             </button>
+            
+            {/* Spacer for horizontal scroll padding */}
+            <div className="w-8 shrink-0 h-px" />
           </div>
         </BoardDragDropProvider>
       </main>
 
-      {/* Task Detail Panel */}
+      {/* Task Detail Panel Overlay */}
       {activeTask && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[85] animate-fade-in" onClick={() => setActiveTaskId(null)} />
-          <TaskDetailPanel
-            task={activeTask}
-            onClose={() => setActiveTaskId(null)}
-            onEdit={(task) => {
-              setEditingTask(task);
-              setIsTaskModalOpen(true);
-            }}
-            onDelete={() => setIsDeleteTaskConfirmOpen(true)}
-          />
-        </>
+        <TaskDetailPanel
+          task={activeTask}
+          onClose={() => setActiveTaskId(null)}
+          onEdit={(task) => {
+            setEditingTask(task);
+            setIsTaskModalOpen(true);
+          }}
+          onDelete={() => setIsDeleteTaskConfirmOpen(true)}
+        />
       )}
 
       {/* Modals */}
