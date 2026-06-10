@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.turbo
+**/.venv
+**/*.env
+**/*.env.*
+**/*.log
+**/.git
+**/__pycache__
+**/.pytest_cache
+**/*.egg-info
+**/.benchmarks
