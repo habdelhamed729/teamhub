@@ -21,7 +21,12 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import type {Channel} from '@teamhub/shared';
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar = ({ isOpen }: SidebarProps) => {
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
   const location = useLocation();
@@ -70,7 +75,10 @@ export const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 bg-surface-secondary border-r border-white/5 flex flex-col h-full shrink-0">
+    <aside className={`
+      fixed lg:static inset-y-0 left-0 z-50 flex flex-col w-64 bg-surface-secondary border-r border-white/5 h-full shrink-0 transition-transform duration-300 ease-in-out lg:translate-x-0
+      ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
+    `}>
       {/* Workspace Switcher Component */}
       <div className="p-4 border-b border-white/5 relative">
         <button

@@ -13,7 +13,7 @@ export const AuthHero = ({
   const features = [
     {
       title: 'AI Assistant & Agents',
-      desc: 'QA, summaries, & auto-assign',
+      desc: 'Q&A, summarization, & auto-assign',
       icon: <Brain className="h-5 w-5 text-ai-accent" />,
     },
     {
@@ -54,13 +54,13 @@ export const AuthHero = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl w-full">
         {features.map((f, i) => (
-          <div key={i} className="p-4 rounded-xl bg-surface-secondary border border-white/5 flex items-start gap-3.5 transition-all hover:border-primary-accent/20 group">
+          <div key={i} className="p-3 sm:p-4 rounded-xl bg-surface-secondary border border-white/5 flex items-start gap-2.5 sm:gap-3.5 transition-all hover:border-primary-accent/20 group">
             <div className="p-2 rounded-lg bg-surface-elevated border border-white/5 transition-colors group-hover:bg-primary-accent/5">
               {f.icon}
             </div>
             <div>
               <h3 className="font-semibold text-sm">{f.title}</h3>
-              <p className="text-xs text-text-muted mt-0.5">{f.desc}</p>
+              <p className="text-[11px] sm:text-xs text-text-muted mt-0.5 tracking-tight">{f.desc}</p>
             </div>
           </div>
         ))}

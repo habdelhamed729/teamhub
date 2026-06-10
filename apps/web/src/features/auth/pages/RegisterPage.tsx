@@ -36,8 +36,8 @@ export const RegisterPage = () => {
 
       {/* Right Side: AuthHero */}
       <AuthHero 
-        title="Supercharge how your team works"
-        description="Set up your workspace in seconds to unlock instant chat, collaborative documents, and workflow automation."
+        title="Start building with modern teams"
+        description="Join thousands of teams collaborating in one unified hub."
       />
     </div>
   );

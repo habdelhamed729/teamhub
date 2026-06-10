@@ -127,7 +127,7 @@ export const DocumentsPage = () => {
 
   return (
     <div className="flex-1 overflow-y-auto bg-main-bg relative z-0">
-      <div className="max-w-7xl mx-auto p-8">
+      <div className="max-w-7xl mx-auto p-4 sm:p-8">
         {/* ── Header ──────────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
           <div>

@@ -88,7 +88,7 @@ export const ChannelPage: React.FC = () => {
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="h-[83px] border-b border-white/5 flex items-center justify-between px-6 bg-[#2A2F36] shrink-0">
+        <div className="h-[83px] border-b border-white/5 flex items-center justify-between px-6 bg-surface-elevated shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-accent text-slate-950 font-bold shadow-md">
               {channel?.type === 'dm' ? <MessageSquare className="h-5 w-5" /> : <Hash className="h-5 w-5" />}
@@ -132,92 +132,107 @@ export const ChannelPage: React.FC = () => {
 
       {/* Members Sidebar */}
       {channel?.type !== 'dm' && showMembers && (
-        <div className="w-80 border-l border-white/5 bg-surface-secondary flex flex-col shrink-0 animate-in slide-in-from-right-8">
-          <div className="h-16 border-b border-white/5 flex items-center px-6 shrink-0">
-            <h3 className="font-semibold text-text-primary">Members</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <>
+          {/* Backdrop for mobile */}
+          <div 
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-xs transition-opacity duration-300"
+            onClick={() => setShowMembers(false)}
+          />
+          <div className="fixed lg:static inset-y-0 right-0 z-50 w-80 border-l border-white/5 bg-surface-secondary flex flex-col shrink-0 animate-in slide-in-from-right-8 h-full">
+            <div className="h-16 border-b border-white/5 flex items-center px-6 shrink-0 justify-between">
+              <h3 className="font-semibold text-text-primary">Members</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowMembers(false)}
+                className="lg:hidden text-text-muted hover:text-text-primary"
+              >
+                Close
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
-            <div className="relative">
-              <div className="flex items-center gap-2">
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Add members..."
-                  className="rounded-lg border border-white/10 px-3 py-2 bg-surface-primary w-full text-sm outline-none focus:border-primary-accent/40 focus:bg-surface-elevated transition-colors"
-                />
-                <Button
-                  onClick={() => selectedUserId && handleAdd(selectedUserId)}
-                  disabled={addMember.isPending || !selectedUserId}
-                  className="px-3"
-                >
-                  Add
-                </Button>
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Add members..."
+                    className="rounded-lg border border-white/10 px-3 py-2 bg-surface-primary w-full text-sm outline-none focus:border-primary-accent/40 focus:bg-surface-elevated transition-colors"
+                  />
+                  <Button
+                    onClick={() => selectedUserId && handleAdd(selectedUserId)}
+                    disabled={addMember.isPending || !selectedUserId}
+                    className="px-3"
+                  >
+                    Add
+                  </Button>
+                </div>
+
+                {debounced && suggestions.length > 0 && (
+                  <ul className="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-lg border border-white/10 bg-surface-elevated shadow-xl">
+                    {suggestions.map((s) => (
+                      s.user !== undefined && (
+                        <li
+                          key={s.user.id}
+                          onClick={() => { setSelectedUserId(s.user?.id || null); setQuery(s.user?.display_name || s.user?.email || ''); }}
+                          className="cursor-pointer px-4 py-3 hover:bg-surface-primary/60 flex items-center gap-3 transition-colors"
+                        >
+                          {s.user.avatar_url ? (
+                            <img src={s.user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-primary-accent/10 flex items-center justify-center font-semibold text-primary-accent shrink-0">
+                              {s.user.display_name?.[0] ?? s.user.email?.[0]}
+                            </div>
+                          )}
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium truncate">{s.user.display_name || s.user.email}</span>
+                            <span className="text-xs text-text-muted truncate">{s.user.email}</span>
+                          </div>
+                        </li>
+                      )
+                    ))}
+                  </ul>
+                )}
               </div>
 
-              {debounced && suggestions.length > 0 && (
-                <ul className="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-lg border border-white/10 bg-surface-elevated shadow-xl">
-                  {suggestions.map((s) => (
-                    s.user !== undefined && (
-                      <li
-                        key={s.user.id}
-                        onClick={() => { setSelectedUserId(s.user?.id || null); setQuery(s.user?.display_name || s.user?.email || ''); }}
-                        className="cursor-pointer px-4 py-3 hover:bg-surface-primary/60 flex items-center gap-3 transition-colors"
-                      >
-                        {s.user.avatar_url ? (
-                          <img src={s.user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
-                        ) : (
-                          <div className="h-8 w-8 rounded-full bg-primary-accent/10 flex items-center justify-center font-semibold text-primary-accent shrink-0">
-                            {s.user.display_name?.[0] ?? s.user.email?.[0]}
+              <div>
+                {loadingMembers ? (
+                  <div className="text-sm text-text-muted text-center py-4">Loading members...</div>
+                ) : (
+                  <ul className="space-y-2">
+                    {members?.length ? members.map((m: WorkspaceMember) => (
+                      <li key={m.user.id} className="rounded-xl border border-white/5 bg-surface-primary/50 px-3 py-2.5 flex items-center justify-between group hover:border-primary-accent/30 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {m.user.avatar_url ? (
+                            <img src={m.user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-primary-accent/10 flex items-center justify-center font-semibold text-primary-accent shrink-0">
+                              {m.user.display_name?.[0] ?? m.user.email?.[0]}
+                            </div>
+                          )}
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium truncate group-hover:text-primary-accent transition-colors">{m.user.display_name || m.user.email}</span>
+                            <span className="text-xs text-text-muted truncate">{m.user.email}</span>
                           </div>
-                        )}
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-medium truncate">{s.user.display_name || s.user.email}</span>
-                          <span className="text-xs text-text-muted truncate">{s.user.email}</span>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleStartDM(m.user.id, m.user.display_name || m.user.email || 'User')}
+                          disabled={createChannel.isPending}
+                          className="text-text-muted hover:text-primary-accent opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
                       </li>
-                    )
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div>
-              {loadingMembers ? (
-                <div className="text-sm text-text-muted text-center py-4">Loading members...</div>
-              ) : (
-                <ul className="space-y-2">
-                  {members?.length ? members.map((m: WorkspaceMember) => (
-                    <li key={m.user.id} className="rounded-xl border border-white/5 bg-surface-primary/50 px-3 py-2.5 flex items-center justify-between group hover:border-primary-accent/30 transition-colors">
-                      <div className="flex items-center gap-3 min-w-0">
-                        {m.user.avatar_url ? (
-                          <img src={m.user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
-                        ) : (
-                          <div className="h-8 w-8 rounded-full bg-primary-accent/10 flex items-center justify-center font-semibold text-primary-accent shrink-0">
-                            {m.user.display_name?.[0] ?? m.user.email?.[0]}
-                          </div>
-                        )}
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-medium truncate group-hover:text-primary-accent transition-colors">{m.user.display_name || m.user.email}</span>
-                          <span className="text-xs text-text-muted truncate">{m.user.email}</span>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleStartDM(m.user.id, m.user.display_name || m.user.email || 'User')}
-                        disabled={createChannel.isPending}
-                        className="text-text-muted hover:text-primary-accent opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                      </Button>
-                    </li>
-                  )) : <div className="text-text-muted text-sm text-center">No members in this channel</div>}
-                </ul>
-              )}
+                    )) : <div className="text-text-muted text-sm text-center">No members in this channel</div>}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

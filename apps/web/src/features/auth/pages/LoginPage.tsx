@@ -35,7 +35,10 @@ export const LoginPage = () => {
       </div>
 
       {/* Right Side: AuthHero */}
-      <AuthHero />
+      <AuthHero 
+        title="The all-in-one workspace for modern teams"
+        description="Chat, manage tasks, write docs, and get AI insights — all in one place."
+      />
     </div>
   );
 };

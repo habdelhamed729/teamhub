@@ -1,10 +1,15 @@
 import React from 'react';
 import { X, Paperclip } from 'lucide-react';
-import type { Message, Attachment } from '@teamhub/shared';
+import type { Attachment } from '@teamhub/shared';
 
 interface ReplyPreviewProps {
   /** The message being replied to */
-  message: Pick<Message, 'content' | 'sender'> & {
+  message: {
+    content: string;
+    sender?: {
+      display_name?: string | null;
+      email?: string;
+    } | null;
     attachments?: Attachment[];
   };
   /** Visual variant: 'bubble' inside a message bubble, 'composer' in the composer area */

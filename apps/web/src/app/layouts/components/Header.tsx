@@ -1,24 +1,34 @@
 import { useAuthStore } from '@/app/store/useAuthStore';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { useNavigate } from 'react-router-dom';
-import { Search, Clock, HelpCircle, User as UserIcon, LogOut } from 'lucide-react';
+import { Search, Clock, HelpCircle, User as UserIcon, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/shared/components/Button';
 import { NotificationDropdown } from '@/features/notifications/components/NotificationDropdown';
 
 interface HeaderProps {
   onSearchClick: () => void;
+  onMenuToggle?: () => void;
 }
 
-export const Header = ({ onSearchClick }: HeaderProps) => {
+export const Header = ({ onSearchClick, onMenuToggle }: HeaderProps) => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const { logout } = useLogout();
 
   return (
-    <header className="h-16 bg-surface-secondary/50 z-3 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 shrink-0">
-      {/* Search Bar Placeholder */}
-      <div className="flex-1 max-w-xl">
-        <div className="relative group cursor-pointer" onClick={onSearchClick}>
+    <header className="h-16 bg-surface-secondary/50 z-3 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 lg:px-8 shrink-0">
+      {/* Mobile Menu & Search Bar container */}
+      <div className="flex items-center gap-3 flex-1 max-w-xl">
+        {onMenuToggle && (
+          <button 
+            onClick={onMenuToggle}
+            className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-text-muted hover:text-text-primary transition-all shrink-0"
+            aria-label="Toggle Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+        <div className="relative group cursor-pointer flex-1" onClick={onSearchClick}>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted group-hover:text-primary-accent transition-colors" />
           <input 
             type="text" 
@@ -26,7 +36,7 @@ export const Header = ({ onSearchClick }: HeaderProps) => {
             readOnly
             className="w-full bg-surface-elevated border border-white/5 rounded-xl py-2 pl-10 pr-4 text-sm cursor-pointer hover:bg-white/5 hover:border-white/10 focus:outline-none transition-all"
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 select-none pointer-events-none">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 select-none pointer-events-none">
             <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-text-muted font-mono">⌘</kbd>
             <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-text-muted font-mono">K</kbd>
           </div>
@@ -34,15 +44,15 @@ export const Header = ({ onSearchClick }: HeaderProps) => {
       </div>
 
       {/* Utility Icons */}
-      <div className="flex items-center gap-6 ml-8">
-        <div className="flex items-center gap-4 text-text-muted border-r border-white/10 pr-6">
-          <button className="hover:text-text-primary transition-colors">
+      <div className="flex items-center gap-3 lg:gap-6 ml-4 lg:ml-8">
+        <div className="flex items-center gap-3 lg:gap-4 text-text-muted border-r border-white/10 pr-4 lg:pr-6">
+          <button className="hidden sm:block hover:text-text-primary transition-colors">
             <Clock className="h-5 w-5" />
           </button>
           
           <NotificationDropdown />
 
-          <button className="hover:text-text-primary transition-colors">
+          <button className="hidden sm:block hover:text-text-primary transition-colors">
             <HelpCircle className="h-5 w-5" />
           </button>
         </div>

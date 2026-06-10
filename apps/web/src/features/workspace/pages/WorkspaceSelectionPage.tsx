@@ -23,11 +23,11 @@ export const WorkspaceSelectionPage = () => {
       <WorkspaceHeader />
 
       {/* Content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-8">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-4xl">
-          <div className="mb-12 text-center">
-            <h1 className="text-4xl font-bold mb-4">Choose your workspace</h1>
-            <p className="text-text-secondary text-lg">Select an existing workspace or create a new one to get started.</p>
+          <div className="mb-8 sm:mb-12 text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Choose your workspace</h1>
+            <p className="text-text-secondary text-base sm:text-lg">Select an existing workspace or create a new one to get started.</p>
           </div>
 
           {isLoading ? (
