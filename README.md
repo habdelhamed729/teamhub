@@ -18,9 +18,10 @@ TeamHub is a high-performance, containerized monorepo platform designed for team
 5. [⚙️ Environment Variables](#️-environment-variables)
 6. [🏃 Running Locally (No Docker)](#-running-locally-no-docker)
 7. [🐳 Running with Docker (Production/Staging)](#-running-with-docker-productionstaging)
-8. [🔌 API Endpoints Summary](#-api-endpoints-summary)
-9. [👥 Developer Experience & Contribution](#-developer-experience--contribution)
-10. [👥 Team Distribution](#-team-distribution)
+8. [🔐 Default Test Credentials](#-default-test-credentials)
+9. [🔌 API Endpoints Summary](#-api-endpoints-summary)
+10. [👥 Developer Experience & Contribution](#-developer-experience--contribution)
+11. [👥 Team Distribution](#-team-distribution)
 
 ---
 
@@ -107,6 +108,7 @@ teamhub/
 
 TeamHub uses an API Gateway architecture with isolated networks to guarantee security:
 
+### Network Topology & Request Routing
 ```mermaid
 flowchart TD
     Client[Browser Host] <-->|HTTP / WebSockets| API[Express API Gateway :3000]
@@ -126,6 +128,151 @@ flowchart TD
             AI
         end
     end
+```
+
+### AI RAG & EventSource Streaming Sequence
+This sequence details how the EventSource streaming query resolves from authentication, chunk matching, to token delivery:
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Client Browser
+    participant API as Express API Gateway
+    participant AI as FastAPI Microservice
+    participant DB as PostgreSQL (pgvector)
+    participant LLM as Groq Cloud API (Llama-3)
+
+    Client->>API: POST /ai/stream/token (question, documentId)
+    API->>DB: Fetch Document details (Verify workspace permissions)
+    DB-->>API: Return Document info
+    API->>API: Generate HMAC-SHA256 Token (payload + exp)
+    API-->>Client: Return signed token + stream URL
+    Client->>AI: GET /stream/{streamId}?token={token} (Open SSE)
+    AI->>AI: Verify JWT Signature (Verify token validity)
+    AI->>AI: Extract query & embed using sentence-transformers
+    AI->>DB: Query cosine similarity (pgvector <=> match chunks)
+    DB-->>AI: Return top K text chunks
+    AI->>LLM: Send system prompt + user question + chunks
+    loop Token Streaming
+        LLM-->>AI: Stream response chunk (tokens)
+        AI-->>Client: Emit "token" event (chunk content)
+    end
+    AI-->>Client: Emit "done" event & close connection
+```
+
+### PostgreSQL Database Schema (ER Diagram)
+Below is the database entity relationship mapping displaying relational tables and the vector store schemas:
+```mermaid
+erDiagram
+    %% Core Entities
+    USER ||--o{ WORKSPACE_MEMBER : has
+    WORKSPACE ||--o{ WORKSPACE_MEMBER : has
+    WORKSPACE ||--|| USER : owned_by
+    WORKSPACE ||--o{ CHANNEL : contains
+    WORKSPACE ||--o{ DOCUMENT : contains
+    WORKSPACE ||--o{ BOARD : contains
+
+    USER ||--o{ CHANNEL_MEMBER : joined
+    CHANNEL ||--o{ CHANNEL_MEMBER : has
+    CHANNEL ||--o{ MESSAGE : contains
+    USER ||--o{ MESSAGE : sends
+
+    MESSAGE ||--o{ REACTION : receives
+    USER ||--o{ REACTION : places
+    MESSAGE ||--o{ MENTION : targets
+    USER ||--o{ MENTION : mentioned
+
+    BOARD ||--o{ BOARD_COLUMN : has
+    BOARD_COLUMN ||--o{ TASK : contains
+    BOARD ||--o{ TASK : contains
+    USER ||--o{ TASK : creates
+    TASK ||--o{ TASK_ASSIGNEE : maps
+    USER ||--o{ TASK_ASSIGNEE : assigned
+    TASK ||--o{ TASK_COMMENT : receives
+    USER ||--o{ TASK_COMMENT : writes
+
+    USER ||--o{ ATTACHMENT : uploads
+    MESSAGE ||--o| ATTACHMENT : contains
+    DOCUMENT ||--o| ATTACHMENT : contains
+    TASK ||--o| ATTACHMENT : contains
+
+    USER ||--o{ NOTIFICATION : receives
+
+    %% AI Specific Entities
+    WORKSPACE ||--o{ AI_EMBEDDING : vectorizes
+    WORKSPACE ||--o{ AI_JOB : queues
+    WORKSPACE ||--o{ AI_CACHE : caches
+
+    %% Class definitions
+    USER {
+        string id PK
+        string email UK
+        string password_hash
+        string display_name
+        string status
+    }
+    WORKSPACE {
+        string id PK
+        string name
+        string slug UK
+        string owner_id FK
+    }
+    WORKSPACE_MEMBER {
+        string workspace_id PK, FK
+        string user_id PK, FK
+        string role
+    }
+    CHANNEL {
+        string id PK
+        string name
+        string type
+        string workspace_id FK
+    }
+    MESSAGE {
+        string id PK
+        string channelId FK
+        string senderId FK
+        string content
+    }
+    DOCUMENT {
+        string id PK
+        string workspace_id FK
+        string title
+        json content
+    }
+    BOARD {
+        string id PK
+        string workspaceId FK
+        string name
+    }
+    TASK {
+        string id PK
+        string columnId FK
+        string creatorId FK
+        string title
+        string priority
+        datetime dueDate
+    }
+    ATTACHMENT {
+        string id PK
+        string file_name
+        string url
+        string message_id FK
+        string document_id FK
+        string task_id FK
+    }
+    AI_EMBEDDING {
+        uuid id PK
+        uuid workspace_id FK
+        string source_type
+        uuid source_id
+        text chunk_text
+        vector embedding
+    }
+    AI_GRAPH_CHECKPOINT {
+        string thread_id PK
+        string checkpoint_id PK
+        blob checkpoint_blob
+    }
 ```
 
 ---
@@ -248,6 +395,14 @@ To permanently remove volumes (clears local state, does not affect Neon database
 ```bash
 docker compose down -v
 ```
+
+## 🔐 Default Test Credentials
+
+For quick local evaluation, you can bypass user registration by authenticating with the default pre-seeded user profile:
+
+* **Email Address**: `e2etester@gmail.com`
+* **Password**: `password123`
+* **Pre-loaded Workspace**: Contains pre-configured task boards, document nodes, channels, and message history.
 
 ---
 
