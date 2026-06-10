@@ -13,3 +13,14 @@ class DocumentTasksState(TypedDict):
     new_board_name: Optional[str]
     created_task_ids: List[str]
     status: str  # 'extracting' | 'clarifying' | 'matching' | 'approving' | 'completed'
+
+class AutoAssignmentState(TypedDict):
+    workspace_id: str
+    board_id: str
+    max_workload: int
+    unassigned_tasks: List[Dict[str, Any]]
+    members: List[Dict[str, Any]]
+    assignments: Dict[str, str]  # taskId -> userId
+    overloaded_members: List[str]
+    status: str  # 'loading' | 'assigning' | 'validating' | 'completed'
+    iteration: int
