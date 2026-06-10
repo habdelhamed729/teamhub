@@ -413,11 +413,11 @@ export const DocumentEditorPage = () => {
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
       />
-
       <AISidebar
         isOpen={isAISidebarOpen}
         onClose={() => setIsAISidebarOpen(false)}
         documentId={documentId!}
+        workspaceId={workspaceId!}
         onTitleSuggested={(newTitle) => setTitle(newTitle)}
         onInsertContent={(content) => {
           if (editorRef) {

@@ -3,13 +3,14 @@ import { X, Sparkles, MessageSquare, FileText, ClipboardList, Tag, Heading, Load
 import { Button } from "@/shared/components/Button";
 import { QAPanel } from "./QAPanel";
 import { SummaryPanel } from "./SummaryPanel";
-import { ActionItemsPanel } from "./ActionItemsPanel";
+import { AgentWorkflowPanel } from "./AgentWorkflowPanel";
 import { useDocumentAI } from "../hooks/useDocumentAI";
 
 interface AISidebarProps {
   isOpen: boolean;
   onClose: () => void;
   documentId: string;
+  workspaceId: string;
   onTitleSuggested?: (title: string) => void;
   onInsertContent?: (content: string) => void;
 }
@@ -18,6 +19,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   isOpen,
   onClose,
   documentId,
+  workspaceId,
   onTitleSuggested,
   onInsertContent,
 }) => {
@@ -112,7 +114,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           <SummaryPanel documentId={documentId} />
         </div>
         <div className={`h-full ${activeTab === "actions" ? "block" : "hidden"}`}>
-          <ActionItemsPanel documentId={documentId} />
+          <AgentWorkflowPanel documentId={documentId} workspaceId={workspaceId} />
         </div>
       </div>
 
