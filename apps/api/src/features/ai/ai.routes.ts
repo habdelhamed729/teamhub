@@ -21,6 +21,8 @@ router.post('/stream/token', AIController.getStreamToken);
 // LangGraph Workflow Endpoints
 router.post('/workflows/document-tasks/start', AIController.startDocumentTasks);
 router.post('/workflows/document-tasks/resume', AIController.resumeDocumentTasks);
+router.post('/workflows/auto-assign/start', AIController.startAutoAssign);
+router.post('/workflows/auto-assign/resume', AIController.resumeAutoAssign);
 router.get('/workflows/threads/:threadId/state', AIController.getWorkflowState);
 
 export { router as aiRouter };

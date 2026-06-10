@@ -305,3 +305,75 @@ export const getWorkflowState = async (req: Request, res: Response) => {
   }
 };
 
+export const startAutoAssign = async (req: Request, res: Response) => {
+  try {
+    const { boardId, maxWorkload } = req.body;
+    const userId = req.user!.sub;
+
+    if (!boardId) {
+      return sendError(res, 'boardId is required', 400);
+    }
+
+    // Verify board exists and fetch workspace
+    const board = await prisma.board.findUnique({
+      where: { id: boardId },
+      select: { workspaceId: true },
+    });
+
+    if (!board) {
+      return sendError(res, 'Board not found', 404);
+    }
+
+    await verifyWorkspaceMember(board.workspaceId, userId);
+
+    const result = await AIService.aiRequest(
+      'POST',
+      '/workflows/auto-assign/start',
+      board.workspaceId,
+      userId,
+      { board_id: boardId, max_workload: maxWorkload },
+    );
+
+    sendSuccess(res, result);
+  } catch (err: any) {
+    sendError(res, err.message ?? 'Auto-assignment startup failed', err.status ?? 500);
+  }
+};
+
+export const resumeAutoAssign = async (req: Request, res: Response) => {
+  try {
+    const { threadId, assignments } = req.body;
+    const userId = req.user!.sub;
+
+    if (!threadId || !assignments) {
+      return sendError(res, 'threadId and assignments are required', 400);
+    }
+
+    const stateResult = await AIService.aiRequest(
+      'GET',
+      `/workflows/threads/${threadId}/state`,
+      '',
+      userId,
+    );
+
+    const workspaceId = stateResult.workspace_id;
+    if (!workspaceId) {
+      return sendError(res, 'Could not retrieve workspace association for this thread', 400);
+    }
+
+    await verifyWorkspaceMember(workspaceId, userId);
+
+    const result = await AIService.aiRequest(
+      'POST',
+      '/workflows/auto-assign/resume',
+      workspaceId,
+      userId,
+      { thread_id: threadId, assignments },
+    );
+
+    sendSuccess(res, result);
+  } catch (err: any) {
+    sendError(res, err.message ?? 'Failed to resume auto-assignment', err.status ?? 500);
+  }
+};
+
