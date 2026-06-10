@@ -6,6 +6,7 @@ import { getDocument } from '../documents/documents.service';
 import * as AIService from './ai.service';
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+const AI_SERVICE_URL_EXTERNAL = process.env.AI_SERVICE_URL_EXTERNAL || AI_SERVICE_URL;
 const AI_SERVICE_TOKEN = process.env.AI_SERVICE_TOKEN!;
 
 /** Verify that a user belongs to a workspace, throws 403 on denial */
@@ -207,7 +208,7 @@ export const getStreamToken = async (req: Request, res: Response) => {
 
     sendSuccess(res, {
       token,
-      url: `${AI_SERVICE_URL}/stream/${streamId}?token=${token}`,
+      url: `${AI_SERVICE_URL_EXTERNAL}/stream/${streamId}?token=${token}`,
     });
   } catch (err: any) {
     sendError(res, err.message ?? 'Failed to generate stream token', err.status ?? 500);

@@ -11,7 +11,26 @@ END $$;
 
 -- Replace the empty legacy Task placeholder with the canonical Work Management Task table.
 ALTER TABLE "Attachment" DROP CONSTRAINT IF EXISTS "Attachment_task_id_fkey";
+
+-- Clean up legacy join tables
+ALTER TABLE "MessageAttachment" DROP CONSTRAINT IF EXISTS "MessageAttachment_messageId_fkey";
+ALTER TABLE "MessageAttachment" DROP CONSTRAINT IF EXISTS "MessageAttachment_attachmentId_fkey";
+DROP TABLE IF EXISTS "MessageAttachment";
+
+ALTER TABLE "DocumentAttachment" DROP CONSTRAINT IF EXISTS "DocumentAttachment_documentId_fkey";
+ALTER TABLE "DocumentAttachment" DROP CONSTRAINT IF EXISTS "DocumentAttachment_attachmentId_fkey";
+DROP TABLE IF EXISTS "DocumentAttachment";
+
+ALTER TABLE "TaskAttachment" DROP CONSTRAINT IF EXISTS "TaskAttachment_taskId_fkey";
+ALTER TABLE "TaskAttachment" DROP CONSTRAINT IF EXISTS "TaskAttachment_attachmentId_fkey";
+DROP TABLE IF EXISTS "TaskAttachment";
+
 DROP TABLE IF EXISTS "Task";
+
+-- Add direct relation columns to Attachment
+ALTER TABLE "Attachment" ADD COLUMN "message_id" TEXT;
+ALTER TABLE "Attachment" ADD COLUMN "document_id" TEXT;
+ALTER TABLE "Attachment" ADD COLUMN "task_id" TEXT;
 
 -- CreateTable
 CREATE TABLE "Board" (
@@ -131,3 +150,14 @@ ALTER TABLE "TaskComment" ADD CONSTRAINT "TaskComment_authorId_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_message_id_fkey" FOREIGN KEY ("message_id") REFERENCES "Message"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "Document"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- CreateIndex
+CREATE INDEX "Attachment_message_id_idx" ON "Attachment"("message_id");
+CREATE INDEX "Attachment_document_id_idx" ON "Attachment"("document_id");
+CREATE INDEX "Attachment_task_id_idx" ON "Attachment"("task_id");
