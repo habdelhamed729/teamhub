@@ -58,6 +58,26 @@ async def start_document_tasks(
 
     try:
         final_state = await compiled_graph.ainvoke(initial_state, config)
+        
+        # Check if the graph was interrupted (LangGraph returns normally on interrupts)
+        state_info = await compiled_graph.aget_state(config)
+        if state_info.next:
+            await db.commit()
+            values = state_info.values
+            interrupts = [task.interrupts for task in state_info.tasks if task.interrupts]
+            active_interrupt = interrupts[0][0] if interrupts else None
+            interrupt_val = active_interrupt.value if hasattr(active_interrupt, "value") else active_interrupt
+
+            return {
+                "thread_id": thread_id,
+                "workspace_id": values.get("workspace_id"),
+                "status": values.get("status"),
+                "next_step": list(state_info.next),
+                "interrupt": interrupt_val,
+                "ambiguous_tasks": values.get("ambiguous_tasks", []),
+                "task_drafts": values.get("task_drafts", [])
+            }
+
         await db.commit()
         return {
             "thread_id": thread_id,
@@ -120,6 +140,26 @@ async def resume_document_tasks(
     try:
         # Resume the workflow using the Command resume payload
         final_state = await compiled_graph.ainvoke(Command(resume=request.payload), config)
+        
+        # Check if the graph was interrupted again
+        state_info = await compiled_graph.aget_state(config)
+        if state_info.next:
+            await db.commit()
+            values = state_info.values
+            interrupts = [task.interrupts for task in state_info.tasks if task.interrupts]
+            active_interrupt = interrupts[0][0] if interrupts else None
+            interrupt_val = active_interrupt.value if hasattr(active_interrupt, "value") else active_interrupt
+
+            return {
+                "thread_id": thread_id,
+                "workspace_id": values.get("workspace_id"),
+                "status": values.get("status"),
+                "next_step": list(state_info.next),
+                "interrupt": interrupt_val,
+                "ambiguous_tasks": values.get("ambiguous_tasks", []),
+                "task_drafts": values.get("task_drafts", [])
+            }
+
         await db.commit()
         return {
             "thread_id": thread_id,
