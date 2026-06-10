@@ -124,12 +124,17 @@ export const getStreamToken = async (
 export interface WorkflowStateResponse {
   thread_id: string;
   workspace_id: string | null;
+  board_id?: string;
   status: string;
   next_step?: string[];
   interrupt?: any;
   ambiguous_tasks?: any[];
   task_drafts?: any[];
   created_task_ids?: string[];
+  assignments?: Record<string, string>;
+  overloaded_members?: string[];
+  unassigned_tasks?: any[];
+  members?: any[];
 }
 
 export const startDocumentTasksWorkflow = async (
@@ -148,6 +153,28 @@ export const resumeDocumentTasksWorkflow = async (
   const { data } = await api.post(`/ai/workflows/document-tasks/resume`, {
     threadId,
     payload,
+  });
+  return data.data as WorkflowStateResponse;
+};
+
+export const startAutoAssignmentWorkflow = async (
+  boardId: string,
+  maxWorkload?: number,
+): Promise<WorkflowStateResponse> => {
+  const { data } = await api.post(`/ai/workflows/auto-assign/start`, {
+    boardId,
+    maxWorkload,
+  });
+  return data.data as WorkflowStateResponse;
+};
+
+export const resumeAutoAssignmentWorkflow = async (
+  threadId: string,
+  assignments: Record<string, string>,
+): Promise<WorkflowStateResponse> => {
+  const { data } = await api.post(`/ai/workflows/auto-assign/resume`, {
+    threadId,
+    assignments,
   });
   return data.data as WorkflowStateResponse;
 };

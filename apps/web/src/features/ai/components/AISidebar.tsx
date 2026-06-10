@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { X, Sparkles, MessageSquare, FileText, ClipboardList, Tag, Heading, Loader2 } from "lucide-react";
+import { X, Sparkles, MessageSquare, FileText, ClipboardList, Tag, Heading, Loader2, UserCheck } from "lucide-react";
 import { Button } from "@/shared/components/Button";
 import { QAPanel } from "./QAPanel";
 import { SummaryPanel } from "./SummaryPanel";
 import { AgentWorkflowPanel } from "./AgentWorkflowPanel";
+import { AutoAssignmentPanel } from "./AutoAssignmentPanel";
 import { useDocumentAI } from "../hooks/useDocumentAI";
 
 interface AISidebarProps {
@@ -23,7 +24,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   onTitleSuggested,
   onInsertContent,
 }) => {
-  const [activeTab, setActiveTab] = useState<"qa" | "summary" | "actions">("qa");
+  const [activeTab, setActiveTab] = useState<"qa" | "summary" | "actions" | "auto-assign">("qa");
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const { generateTitle, isGeneratingTitle, generateTags, isGeneratingTags } = useDocumentAI(documentId);
 
@@ -68,7 +69,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
 
       {/* Segmented Tabs Navigation */}
       <div className="px-4 py-2 border-b border-white/5 bg-surface-secondary/40 shrink-0">
-        <div className="grid grid-cols-3 bg-surface-elevated p-1 rounded-xl border border-white/5">
+        <div className="grid grid-cols-4 bg-surface-elevated p-1 rounded-xl border border-white/5">
           <button
             onClick={() => setActiveTab("qa")}
             className={`py-2 px-1 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
@@ -102,6 +103,17 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             <ClipboardList className="w-3.5 h-3.5" />
             <span>Tasks</span>
           </button>
+          <button
+            onClick={() => setActiveTab("auto-assign")}
+            className={`py-2 px-1 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
+              activeTab === "auto-assign"
+                ? "bg-primary-accent/15 text-primary-accent border border-primary-accent/10"
+                : "text-text-muted hover:text-text-secondary border border-transparent"
+            }`}
+          >
+            <UserCheck className="w-3.5 h-3.5" />
+            <span>Assign</span>
+          </button>
         </div>
       </div>
 
@@ -115,6 +127,9 @@ export const AISidebar: React.FC<AISidebarProps> = ({
         </div>
         <div className={`h-full ${activeTab === "actions" ? "block" : "hidden"}`}>
           <AgentWorkflowPanel documentId={documentId} workspaceId={workspaceId} />
+        </div>
+        <div className={`h-full ${activeTab === "auto-assign" ? "block" : "hidden"}`}>
+          <AutoAssignmentPanel workspaceId={workspaceId} />
         </div>
       </div>
 
