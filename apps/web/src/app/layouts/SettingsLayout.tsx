@@ -3,7 +3,7 @@ import { SettingsSidebar } from './components/SettingsSidebar';
 
 export const SettingsLayout = () => {
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold mb-2">Settings</h1>
         <p className="text-text-muted">Manage your personal preferences and workspace configurations.</p>

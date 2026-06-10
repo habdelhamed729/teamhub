@@ -5,7 +5,11 @@ import { Search, Clock, HelpCircle, User as UserIcon, LogOut } from 'lucide-reac
 import { Button } from '@/shared/components/Button';
 import { NotificationDropdown } from '@/features/notifications/components/NotificationDropdown';
 
-export const Header = () => {
+interface HeaderProps {
+  onSearchClick: () => void;
+}
+
+export const Header = ({ onSearchClick }: HeaderProps) => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const { logout } = useLogout();
@@ -14,14 +18,15 @@ export const Header = () => {
     <header className="h-16 bg-surface-secondary/50 z-3 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 shrink-0">
       {/* Search Bar Placeholder */}
       <div className="flex-1 max-w-xl">
-        <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted group-focus-within:text-primary-accent transition-colors" />
+        <div className="relative group cursor-pointer" onClick={onSearchClick}>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted group-hover:text-primary-accent transition-colors" />
           <input 
             type="text" 
-            placeholder="Search channels, messages, or files..."
-            className="w-full bg-surface-elevated border border-white/5 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary-accent/30 focus:ring-1 focus:ring-primary-accent/20 transition-all"
+            placeholder="Search documents semantically with AI..."
+            readOnly
+            className="w-full bg-surface-elevated border border-white/5 rounded-xl py-2 pl-10 pr-4 text-sm cursor-pointer hover:bg-white/5 hover:border-white/10 focus:outline-none transition-all"
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 select-none pointer-events-none">
             <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-text-muted font-mono">⌘</kbd>
             <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-text-muted font-mono">K</kbd>
           </div>
