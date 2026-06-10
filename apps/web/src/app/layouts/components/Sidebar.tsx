@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Check,
   Search,
+  LayoutGrid,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import type {Channel} from '@teamhub/shared';
@@ -63,6 +64,7 @@ export const Sidebar = () => {
   const basePath = activeWorkspace ? `/workspaces/${activeWorkspace.id}` : '/workspaces';
 
   const navItems = [
+    { label: 'Dashboard', icon: LayoutGrid, path: '/dashboard' },
     { label: 'Members', icon: CheckSquare, path: `${basePath}/members` },
     { label: 'Direct Messages', icon: MessageSquare, path: `${basePath}/messages` },
     { label: 'Tasks', icon: CheckSquare, path: `${basePath}/tasks` },

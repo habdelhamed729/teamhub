@@ -19,6 +19,7 @@ import { DocumentsPage } from "@/features/documents/pages/DocumentsPage";
 import { DocumentEditorPage } from "@/features/documents/pages/DocumentEditorPage";
 import { BoardsPage } from "@/features/work-management/pages/BoardsPage";
 import { BoardPage } from "@/features/work-management/pages/BoardPage";
+import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
 
 const router = createBrowserRouter([
   {
@@ -37,9 +38,7 @@ const router = createBrowserRouter([
         children: [
           {
             path: "/dashboard",
-            element: (
-              <div className="p-10 text-white">Welcome to the Dashboard!</div>
-            ),
+            element: <DashboardPage />,
           },
           {
             path: "/workspaces/:workspaceId/members",   
