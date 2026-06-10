@@ -16,12 +16,12 @@ export const DirectMessagesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-text-primary">Direct Messages</h2>
           <p className="text-sm text-text-muted">Your private conversations</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
           <Plus className="h-4 w-4" />
           <span>New Message</span>
         </Button>

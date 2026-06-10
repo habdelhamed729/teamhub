@@ -6,7 +6,6 @@ import { listChannels } from '@/features/channels/api/channels.api';
 import { useDocuments } from '@/features/documents/hooks/useDocuments';
 import { DocumentsSidebar } from '@/features/documents/components/DocumentsSidebar';
 import { CreateDocumentDialog } from '@/features/documents/components/CreateDocumentDialog';
-import { AISearchModal } from '@/features/ai/components/AISearchModal';
 import {
   Hash,
   MessageSquare,
@@ -16,12 +15,18 @@ import {
   Plus,
   ChevronDown,
   Check,
-  Search,
+  LayoutGrid,
+  Users,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import type {Channel} from '@teamhub/shared';
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar = ({ isOpen }: SidebarProps) => {
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
   const location = useLocation();
@@ -31,19 +36,6 @@ export const Sidebar = () => {
   const [isDocumentsOpen, setIsDocumentsOpen] = useState(false);
   const [isCreateDocOpen, setIsCreateDocOpen] = useState(false);
   const [createDocParentId, setCreateDocParentId] = useState<string | undefined>();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  // Global Ctrl+K / Cmd+K search listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setIsSearchOpen(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   const { data: workspaces } = useQuery({
     queryKey: ['workspaces'],
@@ -62,14 +54,31 @@ export const Sidebar = () => {
 
   const basePath = activeWorkspace ? `/workspaces/${activeWorkspace.id}` : '/workspaces';
 
+  // Automatically expand sections when navigating to their respective routes
+  useEffect(() => {
+    if (location.pathname.startsWith(channelsPath)) {
+      setIsChannelsOpen(true);
+    }
+  }, [location.pathname, channelsPath]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith(`${basePath}/docs`) || location.pathname.startsWith(`${basePath}/documents`)) {
+      setIsDocumentsOpen(true);
+    }
+  }, [location.pathname, basePath]);
+
   const navItems = [
-    { label: 'Members', icon: CheckSquare, path: `${basePath}/members` },
-    { label: 'Direct Messages', icon: MessageSquare, path: `${basePath}/messages` },
+    { label: 'Dashboard', icon: LayoutGrid, path: '/dashboard' },
     { label: 'Tasks', icon: CheckSquare, path: `${basePath}/tasks` },
+    { label: 'Members', icon: Users, path: `${basePath}/members` },
+    { label: 'Direct Messages', icon: MessageSquare, path: `${basePath}/messages` },
   ];
 
   return (
-    <aside className="w-64 bg-surface-secondary border-r border-white/5 flex flex-col h-full shrink-0">
+    <aside className={`
+      fixed lg:static inset-y-0 left-0 z-50 flex flex-col w-64 bg-surface-secondary border-r border-white/5 h-full shrink-0 transition-transform duration-300 ease-in-out lg:translate-x-0
+      ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
+    `}>
       {/* Workspace Switcher Component */}
       <div className="p-4 border-b border-white/5 relative">
         <button
@@ -134,153 +143,150 @@ export const Sidebar = () => {
         )}
       </div>
 
-      {/* AI Semantic Search Trigger Button */}
-      {activeWorkspace && (
-        <div className="px-4 pb-2 shrink-0">
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-surface-elevated hover:bg-white/5 border border-white/5 rounded-xl text-xs text-text-muted hover:text-text-secondary transition-all cursor-pointer select-none"
-          >
-            <div className="flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-text-muted" />
-              <span>Search with AI...</span>
-            </div>
-            <kbd className="font-mono font-bold text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-text-muted shrink-0 select-none">
-              {typeof window !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
-            </kbd>
-          </button>
-        </div>
-      )}
 
       {/* Main Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-8">
         <div>
           <h3 className="px-2 text-xs font-semibold text-text-muted uppercase tracking-wider mb-4">Workspace</h3>
           <div className="space-y-1">
-            <div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setIsChannelsOpen((prev) => !prev)}
-                  aria-label={isChannelsOpen ? 'Collapse channels list' : 'Expand channels list'}
-                  aria-expanded={isChannelsOpen}
-                  className={`rounded-lg p-2 transition-all ${
-                    isChannelsOpen || location.pathname.startsWith(channelsPath)
-                      ? 'text-primary-accent hover:bg-primary-accent/10'
-                      : 'text-text-muted hover:text-text-primary hover:bg-white/5'
-                  }`}
-                >
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isChannelsOpen ? 'rotate-180' : ''}`} />
-                </button>
-                <Link
-                  to={channelsPath}
-                  className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 transition-all group ${
-                    location.pathname.startsWith(channelsPath)
-                      ? 'bg-primary-accent/10 text-primary-accent font-medium'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
-                  }`}
-                >
-                  <Hash
-                    className={`h-4 w-4 ${
-                      location.pathname.startsWith(channelsPath) ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'
-                    }`}
-                  />
-                  <span className="text-sm">Channels</span>
-                </Link>
-              </div>
-
-              {isChannelsOpen && (
-                <div className="ml-4 mt-2 space-y-1 border-l border-white/5 pl-3">
-                  {isChannelsLoading ? (
-                    <div className="px-3 py-2 text-xs text-text-muted">Loading channels...</div>
-                  ) : channels?.filter((c: Channel) => c.type !== 'dm').length ? (
-                    channels.filter((c: Channel) => c.type !== 'dm').map((channel: Channel) => {
-                      const channelPath = `${channelsPath}/${channel.id}`;
-                      const isChannelActive = location.pathname === channelPath;
-
-                      return (
-                        <Link
-                          key={channel.id}
-                          to={channelPath}
-                          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
-                            isChannelActive
-                              ? 'bg-primary-accent/10 text-primary-accent'
-                              : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
-                          }`}
-                        >
-                          <span className="text-text-muted">#</span>
-                          <span className="min-w-0 truncate">{channel.name}</span>
-                        </Link>
-                      );
-                    })
-                  ) : (
-                    <div className="px-3 py-2 text-xs text-text-muted">No channels found</div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setIsDocumentsOpen((prev) => !prev)}
-                  className={`rounded-lg p-2 transition-all ${
-                    isDocumentsOpen || location.pathname.startsWith(`${basePath}/docs`) || location.pathname.startsWith(`${basePath}/documents`)
-                      ? 'text-primary-accent hover:bg-primary-accent/10'
-                      : 'text-text-muted hover:text-text-primary hover:bg-white/5'
-                  }`}
-                >
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isDocumentsOpen ? 'rotate-180' : ''}`} />
-                </button>
-                <Link
-                  to={`${basePath}/documents`}
-                  className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 transition-all group ${
-                    location.pathname === `${basePath}/documents`
-                      ? 'bg-primary-accent/10 text-primary-accent font-medium'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
-                  }`}
-                >
-                  <FileText
-                    className={`h-4 w-4 ${
-                      location.pathname === `${basePath}/documents` ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'
-                    }`}
-                  />
-                  <span className="text-sm">Documents</span>
-                </Link>
-              </div>
-
-              {isDocumentsOpen && (
-                <div className="ml-4 mt-2">
-                  <DocumentsSidebar 
-                    workspaceId={activeWorkspace?.id ?? ''} 
-                    documents={documents?.documents || []} 
-                    onCreateNew={(parentId) => {
-                      setCreateDocParentId(parentId);
-                      setIsCreateDocOpen(true);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-
             {navItems.map((item) => {
               const isActive = location.pathname.startsWith(item.path);
               return (
                 <Link
                   key={item.label}
                   to={item.path}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group relative ${
                     isActive
                       ? 'bg-primary-accent/10 text-primary-accent font-medium'
                       : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                   }`}
                 >
+                  {isActive && (
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-primary-accent rounded-r-full" />
+                  )}
                   <item.icon className={`h-4 w-4 ${isActive ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'}`} />
                   <span className="text-sm">{item.label}</span>
                 </Link>
               );
             })}
+
+            {/* Resources Section Divider */}
+            <div className="pt-2 mt-2 border-t border-white/5 space-y-1">
+              {/* Channels Accordion */}
+              <div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsChannelsOpen((prev) => !prev)}
+                    aria-label={isChannelsOpen ? 'Collapse channels list' : 'Expand channels list'}
+                    aria-expanded={isChannelsOpen}
+                    className={`rounded-lg p-2 transition-all ${
+                      isChannelsOpen || location.pathname.startsWith(channelsPath)
+                        ? 'text-primary-accent hover:bg-primary-accent/10'
+                        : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                    }`}
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isChannelsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <Link
+                    to={channelsPath}
+                    className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 transition-all group relative ${
+                      location.pathname.startsWith(channelsPath)
+                        ? 'bg-primary-accent/10 text-primary-accent font-medium'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                    }`}
+                  >
+                    {location.pathname.startsWith(channelsPath) && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-primary-accent rounded-r-full" />
+                    )}
+                    <Hash
+                      className={`h-4 w-4 ${
+                        location.pathname.startsWith(channelsPath) ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'
+                      }`}
+                    />
+                    <span className="text-sm">Channels</span>
+                  </Link>
+                </div>
+
+                {isChannelsOpen && (
+                  <div className="ml-4 mt-2 space-y-1 border-l border-white/5 pl-3">
+                    {isChannelsLoading ? (
+                      <div className="px-3 py-2 text-xs text-text-muted">Loading channels...</div>
+                    ) : channels?.filter((c: Channel) => c.type !== 'dm').length ? (
+                      channels.filter((c: Channel) => c.type !== 'dm').map((channel: Channel) => {
+                        const channelPath = `${channelsPath}/${channel.id}`;
+                        const isChannelActive = location.pathname === channelPath;
+
+                        return (
+                          <Link
+                            key={channel.id}
+                            to={channelPath}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                              isChannelActive
+                                ? 'bg-primary-accent/10 text-primary-accent'
+                                : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                            }`}
+                          >
+                            <span className="text-text-muted">#</span>
+                            <span className="min-w-0 truncate">{channel.name}</span>
+                          </Link>
+                        );
+                      })
+                    ) : (
+                      <div className="px-3 py-2 text-xs text-text-muted">No channels found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Documents Accordion */}
+              <div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsDocumentsOpen((prev) => !prev)}
+                    className={`rounded-lg p-2 transition-all ${
+                      isDocumentsOpen || location.pathname.startsWith(`${basePath}/docs`) || location.pathname.startsWith(`${basePath}/documents`)
+                        ? 'text-primary-accent hover:bg-primary-accent/10'
+                        : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                    }`}
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isDocumentsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <Link
+                    to={`${basePath}/documents`}
+                    className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 transition-all group relative ${
+                      location.pathname === `${basePath}/documents` || location.pathname.startsWith(`${basePath}/docs`)
+                        ? 'bg-primary-accent/10 text-primary-accent font-medium'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                    }`}
+                  >
+                    {(location.pathname === `${basePath}/documents` || location.pathname.startsWith(`${basePath}/docs`)) && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-primary-accent rounded-r-full" />
+                    )}
+                    <FileText
+                      className={`h-4 w-4 ${
+                        location.pathname === `${basePath}/documents` || location.pathname.startsWith(`${basePath}/docs`) ? 'text-primary-accent' : 'text-text-muted group-hover:text-text-primary'
+                      }`}
+                    />
+                    <span className="text-sm">Documents</span>
+                  </Link>
+                </div>
+
+                {isDocumentsOpen && (
+                  <div className="ml-4 mt-2">
+                    <DocumentsSidebar 
+                      workspaceId={activeWorkspace?.id ?? ''} 
+                      documents={documents?.documents || []} 
+                      onCreateNew={(parentId) => {
+                        setCreateDocParentId(parentId);
+                        setIsCreateDocOpen(true);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -314,13 +320,6 @@ export const Sidebar = () => {
         />
       )}
 
-      {activeWorkspace && (
-        <AISearchModal
-          workspaceId={activeWorkspace.id}
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-        />
-      )}
     </aside>
   );
 };

@@ -169,7 +169,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         channelType !== 'dm' ? 'items-end' : 'items-start'
       } ${
         isOwn ? 'flex-row-reverse justify-start' : 'justify-start'
-      } ${isTemp ? '' : 'hover:bg-white/[0.02]'}`}
+      } ${isTemp ? '' : 'hover:bg-white/2'}`}
     >
       {/* Avatar (Only shown in group/channel chats, hidden in DMs) */}
       {channelType !== 'dm' && (
@@ -189,7 +189,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       )}
 
       {/* Message content block */}
-      <div className={`flex flex-col min-w-0 max-w-[70%] relative ${isOwn ? 'items-end' : 'items-start'}`}>
+      <div className={`flex flex-col min-w-0 max-w-[85%] sm:max-w-[70%] relative ${isOwn ? 'items-end' : 'items-start'}`}>
         
         {/* Sender Info (Only show name for others in group) */}
         {channelType !== 'dm' && !isOwn && message.sender && (
@@ -220,7 +220,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           <div
             ref={bubbleRef}
             onContextMenu={handleContextMenu}
-            className={`w-fit max-w-full whitespace-pre-wrap break-words rounded-2xl px-4 py-3 flex flex-col gap-2 shadow-sm border transition-all duration-200 ${
+            className={`w-fit max-w-full whitespace-pre-wrap wrap-break-word rounded-2xl px-4 py-3 flex flex-col gap-2 shadow-sm border transition-all duration-200 ${
               isOwn
                 ? `${isHovered ? 'bg-[#317268] border-[#317268]' : 'bg-msg-own-bg border-[#3B8E81]'} text-white rounded-br-none`
                 : `${isHovered ? 'bg-[#2D3135] border-[#383838]' : 'bg-[#282b30] border-[#2F3337]'} text-white rounded-bl-none`
@@ -263,7 +263,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
             {/* 3. Text Message content */}
             {message.content && (
-              <p className="text-[16px] font-normal leading-[1.25] font-[Roboto]">
+              <p className="text-[16px] font-normal leading-tight font-[Roboto]">
                 {formatMessageContent(message.content)}
               </p>
             )}

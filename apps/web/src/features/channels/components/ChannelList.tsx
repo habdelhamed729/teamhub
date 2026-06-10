@@ -28,23 +28,26 @@ export const ChannelList: React.FC<Props> = ({ workspaceId }) => {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-text-primary">Channels</h3>
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-text-primary">Channels</h3>
+          <p className="text-xs text-text-muted">Browse and join workspace channels</p>
+        </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setOpenCreate(true)}
-          className="border-2 border-primary-accent/50 text-primary-accent hover:bg-primary-accent/10"
+          className="border-2 border-primary-accent/50 text-primary-accent hover:bg-primary-accent/10 w-full sm:w-auto justify-center"
         >
-          Create
+          Create Channel
         </Button>
       </div>
       <ul className="space-y-3">
         {channels?.length > 0 ? channels.map((c: Channel) => (
           <li key={c.id}>
-            <div className="group flex items-center justify-between rounded-2xl border border-primary-accent/15 bg-surface-secondary/60 px-4 py-4 transition-all hover:-translate-y-px hover:border-primary-accent/40 hover:bg-primary-accent/5">
-              <Link to={`/workspaces/${workspaceId}/channels/${c.id}`} className="flex min-w-0 flex-1 items-center gap-3 pr-4">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary-accent/15 bg-primary-accent/10 text-primary-accent font-semibold transition-colors group-hover:border-primary-accent/30">
+            <div className="group flex flex-col sm:flex-row sm:items-center justify-between rounded-2xl border border-primary-accent/15 bg-surface-secondary/60 p-4 gap-4 transition-all hover:-translate-y-px hover:border-primary-accent/40 hover:bg-primary-accent/5">
+              <Link to={`/workspaces/${workspaceId}/channels/${c.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary-accent/15 bg-primary-accent/10 text-primary-accent font-semibold transition-colors group-hover:border-primary-accent/30 shrink-0">
                   #
                 </span>
                 <div className="flex min-w-0 flex-col">
@@ -53,7 +56,7 @@ export const ChannelList: React.FC<Props> = ({ workspaceId }) => {
                 </div>
               </Link>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end gap-2 border-t border-white/5 pt-3 sm:pt-0 sm:border-none">
                 <span
                   className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                     c.viewer_is_member

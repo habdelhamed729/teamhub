@@ -7,14 +7,8 @@ export const RegisterPage = () => {
 
   return (
     <div className="min-h-screen bg-main-bg flex flex-col lg:flex-row text-text-primary">
-      {/* Left Side: AuthHero */}
-      <AuthHero 
-        title="Start building with modern teams"
-        description="Join thousands of teams collaborating in one unified hub."
-      />
-
-      {/* Right Side: Auth Form */}
-      <div className="lg:w-1/2 flex items-center justify-center p-8 bg-main-bg border-l border-white/5">
+      {/* Left Side: Auth Form */}
+      <div className="lg:w-1/2 flex items-center justify-center p-8 bg-main-bg border-r border-white/5">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center lg:text-left">
             <h1 className="text-3xl font-bold tracking-tight">Create an account</h1>
@@ -39,6 +33,12 @@ export const RegisterPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Right Side: AuthHero */}
+      <AuthHero 
+        title="Start building with modern teams"
+        description="Join thousands of teams collaborating in one unified hub."
+      />
     </div>
   );
 };

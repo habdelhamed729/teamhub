@@ -43,8 +43,8 @@ export const BoardsPage = () => {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Workspace Boards</h1>
           <p className="text-text-secondary text-sm mt-1">
@@ -57,6 +57,7 @@ export const BoardsPage = () => {
             variant="primary"
             icon={<Plus className="w-4 h-4" />}
             onClick={() => setIsModalOpen(true)}
+            className="w-full sm:w-auto justify-center"
           >
             New Board
           </Button>
