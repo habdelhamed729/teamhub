@@ -213,3 +213,95 @@ export const getStreamToken = async (req: Request, res: Response) => {
     sendError(res, err.message ?? 'Failed to generate stream token', err.status ?? 500);
   }
 };
+
+export const startDocumentTasks = async (req: Request, res: Response) => {
+  try {
+    const { documentId } = req.body;
+    const userId = req.user!.sub;
+
+    if (!documentId) {
+      return sendError(res, 'documentId is required', 400);
+    }
+
+    const doc = await getDocument(documentId, userId);
+
+    const result = await AIService.aiRequest(
+      'POST',
+      '/workflows/document-tasks/start',
+      doc.workspace_id,
+      userId,
+      { document_id: documentId },
+    );
+
+    sendSuccess(res, result);
+  } catch (err: any) {
+    sendError(res, err.message ?? 'Workflow startup failed', err.status ?? 500);
+  }
+};
+
+export const resumeDocumentTasks = async (req: Request, res: Response) => {
+  try {
+    const { threadId, payload } = req.body;
+    const userId = req.user!.sub;
+
+    if (!threadId || !payload) {
+      return sendError(res, 'threadId and payload are required', 400);
+    }
+
+    const stateResult = await AIService.aiRequest(
+      'GET',
+      `/workflows/threads/${threadId}/state`,
+      '',
+      userId,
+    );
+
+    const workspaceId = stateResult.workspace_id;
+    if (!workspaceId) {
+      return sendError(res, 'Could not retrieve workspace association for this thread', 400);
+    }
+
+    await verifyWorkspaceMember(workspaceId, userId);
+
+    const result = await AIService.aiRequest(
+      'POST',
+      '/workflows/document-tasks/resume',
+      workspaceId,
+      userId,
+      { thread_id: threadId, payload },
+    );
+
+    sendSuccess(res, result);
+  } catch (err: any) {
+    sendError(res, err.message ?? 'Failed to resume workflow', err.status ?? 500);
+  }
+};
+
+export const getWorkflowState = async (req: Request, res: Response) => {
+  try {
+    const { threadId } = req.params;
+    const userId = req.user!.sub;
+
+    if (!threadId) {
+      return sendError(res, 'threadId is required', 400);
+    }
+
+    const stateResult = await AIService.aiRequest(
+      'GET',
+      `/workflows/threads/${threadId}/state`,
+      '',
+      userId,
+    );
+
+    const workspaceId = stateResult.workspace_id;
+    if (!workspaceId) {
+      return sendError(res, 'Could not retrieve workspace association for this thread', 400);
+    }
+
+    await verifyWorkspaceMember(workspaceId, userId);
+
+    sendSuccess(res, stateResult);
+  } catch (err: any) {
+    sendError(res, err.message ?? 'Failed to retrieve workflow state', err.status ?? 500);
+  }
+};
+
