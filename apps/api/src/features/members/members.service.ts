@@ -9,6 +9,8 @@ export const listMembers = async (workspaceId: string) => {
   });
 
   return members.map((m) => ({
+    workspace_id: m.workspace_id,
+    user_id: m.user_id,
     user: m.user,
     role: m.role,
     joined_at: m.joined_at,

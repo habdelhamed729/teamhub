@@ -10,8 +10,9 @@ import { ColumnModal } from '../components/ColumnModal';
 import { BoardModal } from '../components/BoardModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { Button } from '@/shared/components/Button';
-import { ChevronLeft, Plus, Settings } from 'lucide-react';
+import { ChevronLeft, Plus, Settings, Sparkles, X } from 'lucide-react';
 import type { TaskDTO, BoardColumnDTO } from '@teamhub/shared';
+import { AutoAssignmentPanel } from '../../ai/components/AutoAssignmentPanel';
 import { BoardDragDropProvider } from '../components/BoardDragDropProvider';
 import { useBoardRealtime } from '../hooks/useBoardRealtime';
 import { buildCreateTaskPayload, buildUpdateTaskPayload } from '../utils/workManagementPayloads';
@@ -66,6 +67,7 @@ export const BoardPage = () => {
   const [isDeleteBoardConfirmOpen, setIsDeleteBoardConfirmOpen] = useState(false);
   const [isDeleteTaskConfirmOpen, setIsDeleteTaskConfirmOpen] = useState(false);
   const [isDeleteColumnConfirmOpen, setIsDeleteColumnConfirmOpen] = useState(false);
+  const [isAutoAssignOpen, setIsAutoAssignOpen] = useState(false);
 
   const activeTask = useMemo(() => {
     if (!board || !activeTaskId) return null;
@@ -158,6 +160,15 @@ export const BoardPage = () => {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Sparkles className="w-4 h-4 text-violet-400" />}
+              onClick={() => setIsAutoAssignOpen(true)}
+              className="rounded-xl text-text-muted hover:text-text-primary hover:bg-white/5 h-9"
+            >
+              Auto-Assign
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -409,6 +420,26 @@ export const BoardPage = () => {
         title="Delete Column"
         description="This will permanently delete the column and all its tasks. Are you sure?"
       />
+
+      {isAutoAssignOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-85 animate-fade-in lg:bg-black/20" 
+            onClick={() => setIsAutoAssignOpen(false)} 
+          />
+          <div className="fixed inset-y-0 right-0 w-full sm:w-[500px] lg:w-[450px] bg-surface-elevated border-l border-white/10 shadow-2xl z-90 flex flex-col animate-slide-in-right ring-1 ring-white/5">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-surface-elevated/80 backdrop-blur-md sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" iconOnly size="sm" onClick={() => setIsAutoAssignOpen(false)} icon={<X className="w-5 h-5" />} />
+                <h2 className="text-xs font-bold text-text-muted uppercase tracking-widest text-[10px]">AI Workload Optimizer</h2>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden min-h-0 bg-surface-secondary/20 relative">
+              <AutoAssignmentPanel workspaceId={workspaceId || ''} initialBoardId={boardId} />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
