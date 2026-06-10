@@ -18,4 +18,10 @@ router.post('/workspaces/:workspaceId/search', AIController.semanticSearch);
 // Streaming Token Endpoint
 router.post('/stream/token', AIController.getStreamToken);
 
+// LangGraph Workflow Endpoints
+router.post('/workflows/document-tasks/start', AIController.startDocumentTasks);
+router.post('/workflows/document-tasks/resume', AIController.resumeDocumentTasks);
+router.get('/workflows/threads/:threadId/state', AIController.getWorkflowState);
+
 export { router as aiRouter };
+
