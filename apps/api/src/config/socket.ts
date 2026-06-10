@@ -1,6 +1,7 @@
 import { Server as HTTPServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import { MessageEvents, WorkManagementEvents, WorkManagementRooms } from '@teamhub/shared';
+import { prisma } from '../database/prisma';
 
 let io: Server | null = null;
 
@@ -22,6 +23,16 @@ export const initSocket = (server: HTTPServer) => {
     }
 
     console.log(`Socket connected: ${userId}`);
+
+    // Update user status to online
+    prisma.user.update({
+      where: { id: userId },
+      data: { status: 'online' }
+    })
+    .then(() => {
+      socket.broadcast.emit('USER_STATUS_CHANGED', { userId, status: 'online' });
+    })
+    .catch(err => console.error(`Failed to set user online: ${err}`));
 
     // ── Personal room — for targeted notifications & mentions ──
     socket.join(`user:${userId}`);
@@ -62,6 +73,17 @@ export const initSocket = (server: HTTPServer) => {
     // ── Disconnect ─────────────────────────────────────────────
     socket.on('disconnect', () => {
       console.log(`Socket disconnected: ${userId}`);
+      const activeConnections = io?.sockets.adapter.rooms.get(`user:${userId}`);
+      if (!activeConnections || activeConnections.size === 0) {
+        prisma.user.update({
+          where: { id: userId },
+          data: { status: 'offline' }
+        })
+        .then(() => {
+          socket.broadcast.emit('USER_STATUS_CHANGED', { userId, status: 'offline' });
+        })
+        .catch(err => console.error(`Failed to set user offline: ${err}`));
+      }
     });
   });
 

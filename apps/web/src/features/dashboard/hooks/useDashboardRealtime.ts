@@ -19,19 +19,23 @@ export const useDashboardRealtime = (workspaceId: string, boards: any[] | undefi
       queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.workspace(workspaceId) });
     };
 
+    socket.on('connect', handleRealtimeUpdate);
     socket.on(WorkManagementEvents.TASK_CREATED, handleRealtimeUpdate);
     socket.on(WorkManagementEvents.TASK_UPDATED, handleRealtimeUpdate);
     socket.on(WorkManagementEvents.TASK_MOVED, handleRealtimeUpdate);
     socket.on(WorkManagementEvents.TASK_DELETED, handleRealtimeUpdate);
+    socket.on('USER_STATUS_CHANGED', handleRealtimeUpdate);
 
     return () => {
       boards.forEach((board) => {
         socket.emit(WorkManagementEvents.LEAVE_BOARD, board.id);
       });
+      socket.off('connect', handleRealtimeUpdate);
       socket.off(WorkManagementEvents.TASK_CREATED, handleRealtimeUpdate);
       socket.off(WorkManagementEvents.TASK_UPDATED, handleRealtimeUpdate);
       socket.off(WorkManagementEvents.TASK_MOVED, handleRealtimeUpdate);
       socket.off(WorkManagementEvents.TASK_DELETED, handleRealtimeUpdate);
+      socket.off('USER_STATUS_CHANGED', handleRealtimeUpdate);
     };
   }, [workspaceId, boards, socket, queryClient]);
 };
