@@ -28,7 +28,7 @@ export const RecentDocuments = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {recentDocuments.map((doc) => (
+        {recentDocuments.slice(0, 4).map((doc) => (
           <div 
             key={doc.id}
             onClick={() => navigate(`/workspaces/${workspaceId}/docs/${doc.id}`)}

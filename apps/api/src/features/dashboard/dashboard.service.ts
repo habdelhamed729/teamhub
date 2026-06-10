@@ -140,7 +140,7 @@ export const fetchRecentDocuments = async (workspaceId: string) => {
     orderBy: {
       updated_at: 'desc'
     },
-    take: 5,
+    take: 4,
     include: {
       last_editor: {
         select: { id: true, display_name: true, avatar_url: true }
