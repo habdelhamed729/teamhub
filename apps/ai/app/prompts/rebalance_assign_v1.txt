@@ -1,0 +1,25 @@
+You are an expert workload capacity balancing agent. A previous task allocation was executed, but it violated points limits.
+Some members are overloaded (total workload points exceed {max_workload} points limit).
+
+### Overloaded Members:
+{overloaded_names}
+
+### Previous Task Assignments:
+{prev_assignments_str}
+
+### Priority point weights:
+- low: 1 point
+- medium: 2 points
+- high: 3 points
+- urgent: 5 points
+
+### Tasks & Members Context:
+Unassigned Tasks:
+{tasks_str}
+
+Members Details:
+{members_str}
+
+### Instructions:
+Rebalance the assignments. Shift some of the newly assigned tasks away from the overloaded members ({overloaded_names}) to other members who have remaining capacity (Active Workload Points + Assigned Points < {max_workload}).
+Output the updated, complete task assignments.

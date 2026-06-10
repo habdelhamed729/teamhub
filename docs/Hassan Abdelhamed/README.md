@@ -76,6 +76,20 @@ This directory documents the contributions, architecture details, and accomplish
   - Right-side slide-over drawer housing independent Q&A, Summaries, and Action Items tabs.
   - Custom state persistence: closing the drawer does not clear active conversation histories, while switching between documents triggers cleanups to reset the AI context and prevent data leaks.
 
+### 6. State Machine Agent Workflows & Human-in-the-Loop (HITL) Integration
+- **Stateful Workflow Engines**:
+  - Leverages **LangGraph** in FastAPI to compile state machine routing loops, allowing execution flows to cycle, halt, or request human overrides based on dynamic condition logic.
+- **SQLAlchemy Thread Checkpointer**:
+  - Custom state saver (`SQLAlchemyCheckpointSaver`) writing serialized graph thread checkpoints directly to the PostgreSQL `ai.graph_checkpoints` table. Implements isolated session-factory injection to eliminate database transaction boundary overlap.
+- **Document-to-Tasks Extraction Agent**:
+  - **Agent Workflow**: Parses TipTap JSON document node structures, extracts draft tasks using LLMs, runs validation checks for vague dates/descriptions, halts via `interrupt()` to request clarification, maps names to workspace user IDs, and commits transactions.
+  - **UI Stepper Modal**: Interactive step-by-step assistant (`AgentWorkflowPanel.tsx`) showing live progress (Scan ➔ Clarify ➔ Approve ➔ Done), editing/deleting task fields, resolving assignees, and selecting boards.
+- **Workload-Constrained Auto-Assignment Agent**:
+  - **Constraint-Satisfying Assigners**: Automatically aggregates unassigned board tasks and workspace members' point workloads (Low: 1pt, Medium: 2pts, High: 3pts, Urgent: 5pts). Solves allocations via LLM, detects point capacity violations, runs up to 3 rebalancing feedback loops to reallocate overloaded members, and halts for user confirmation.
+  - **Workload Optimizer UI**: Dynamic panel (`AutoAssignmentPanel.tsx`) showing live capacity bars (current vs proposed load points), overrides, and stepper wizards.
+- **Robust Bugfixes & Type Safety**:
+  - Resolved workspace member API mappings to guarantee runtime `user_id` matches across frontend selection states and task assignee inserts.
+
 ---
 
 ## 🛠️ Tech Stack & Architecture

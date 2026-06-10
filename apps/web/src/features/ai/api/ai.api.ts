@@ -53,47 +53,65 @@ export interface StreamTokenResponse {
   url: string;
 }
 
-export const documentQA = async (documentId: string, question: string): Promise<QAResponse> => {
-  const { data } = await api.post(`/ai/documents/${documentId}/qa`, { question });
+export const documentQA = async (
+  documentId: string,
+  question: string,
+): Promise<QAResponse> => {
+  const { data } = await api.post(`/ai/documents/${documentId}/qa`, {
+    question,
+  });
   return data.data as QAResponse;
 };
 
 export const summarizeDocument = async (
   documentId: string,
-  length: "short" | "medium" | "long" = "medium"
+  length: "short" | "medium" | "long" = "medium",
 ): Promise<SummarizeResponse> => {
-  const { data } = await api.post(`/ai/documents/${documentId}/summarize`, { length });
+  const { data } = await api.post(`/ai/documents/${documentId}/summarize`, {
+    length,
+  });
   return data.data as SummarizeResponse;
 };
 
-export const generateTags = async (documentId: string): Promise<TagsResponse> => {
+export const generateTags = async (
+  documentId: string,
+): Promise<TagsResponse> => {
   const { data } = await api.post(`/ai/documents/${documentId}/generate-tags`);
   return data.data as TagsResponse;
 };
 
-export const generateTitle = async (documentId: string): Promise<TitleResponse> => {
+export const generateTitle = async (
+  documentId: string,
+): Promise<TitleResponse> => {
   const { data } = await api.post(`/ai/documents/${documentId}/generate-title`);
   return data.data as TitleResponse;
 };
 
-export const extractActionItems = async (documentId: string): Promise<ActionExtractionResponse> => {
-  const { data } = await api.post(`/ai/documents/${documentId}/extract-actions`);
+export const extractActionItems = async (
+  documentId: string,
+): Promise<ActionExtractionResponse> => {
+  const { data } = await api.post(
+    `/ai/documents/${documentId}/extract-actions`,
+  );
   return data.data as ActionExtractionResponse;
 };
 
 export const workspaceSemanticSearch = async (
   workspaceId: string,
   query: string,
-  limit = 10
+  limit = 10,
 ): Promise<SearchResponse> => {
-  const { data } = await api.post(`/ai/workspaces/${workspaceId}/search`, { query, limit });
+  const { data } = await api.post(`/ai/workspaces/${workspaceId}/search`, {
+    query,
+    limit,
+  });
   return data.data as SearchResponse;
 };
 
 export const getStreamToken = async (
   documentId: string,
   action: "qa" | "summarize",
-  payload: Record<string, any>
+  payload: Record<string, any>,
 ): Promise<StreamTokenResponse> => {
   const { data } = await api.post(`/ai/stream/token`, {
     documentId,
@@ -101,4 +119,69 @@ export const getStreamToken = async (
     payload,
   });
   return data.data as StreamTokenResponse;
+};
+
+export interface WorkflowStateResponse {
+  thread_id: string;
+  workspace_id: string | null;
+  board_id?: string;
+  status: string;
+  next_step?: string[];
+  interrupt?: any;
+  ambiguous_tasks?: any[];
+  task_drafts?: any[];
+  created_task_ids?: string[];
+  assignments?: Record<string, string>;
+  overloaded_members?: string[];
+  unassigned_tasks?: any[];
+  members?: any[];
+}
+
+export const startDocumentTasksWorkflow = async (
+  documentId: string,
+): Promise<WorkflowStateResponse> => {
+  const { data } = await api.post(`/ai/workflows/document-tasks/start`, {
+    documentId,
+  });
+  return data.data as WorkflowStateResponse;
+};
+
+export const resumeDocumentTasksWorkflow = async (
+  threadId: string,
+  payload: Record<string, any>,
+): Promise<WorkflowStateResponse> => {
+  const { data } = await api.post(`/ai/workflows/document-tasks/resume`, {
+    threadId,
+    payload,
+  });
+  return data.data as WorkflowStateResponse;
+};
+
+export const startAutoAssignmentWorkflow = async (
+  boardId: string,
+  maxWorkload?: number,
+): Promise<WorkflowStateResponse> => {
+  const { data } = await api.post(`/ai/workflows/auto-assign/start`, {
+    boardId,
+    maxWorkload,
+  });
+  return data.data as WorkflowStateResponse;
+};
+
+export const resumeAutoAssignmentWorkflow = async (
+  threadId: string,
+  assignments: Record<string, string>,
+): Promise<WorkflowStateResponse> => {
+  const { data } = await api.post(`/ai/workflows/auto-assign/resume`, {
+    threadId,
+    assignments,
+  });
+  return data.data as WorkflowStateResponse;
+};
+
+export const getWorkflowThreadState = async (
+  threadId: string,
+): Promise<WorkflowStateResponse> => {
+  const { data } = await api.get(`/ai/workflows/threads/${threadId}/state`);
+  return data.data as WorkflowStateResponse;
 };
