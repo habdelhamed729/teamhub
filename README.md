@@ -12,6 +12,9 @@
   <img src="https://img.shields.io/badge/Prisma-39827F?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma" />
   <img src="https://img.shields.io/badge/Docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/Nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx" />
+  <img src="https://img.shields.io/badge/Hugging_Face-%23FFD21E.svg?style=for-the-badge&logo=huggingface&logoColor=black" alt="Hugging Face" />
+  <img src="https://img.shields.io/badge/LangChain-1C3C3A?style=for-the-badge&logo=chainlink&logoColor=white" alt="LangChain" />
+  <img src="https://img.shields.io/badge/Groq-f55a42?style=for-the-badge&logo=cpu&logoColor=white" alt="Groq" />
 </p>
 
 TeamHub is a high-performance, containerized monorepo platform designed for team coordination, document knowledge-base building, and automated project workflows. It integrates real-time team collaboration with state-of-the-art state machine AI agents to scan specifications, run workload-constrained auto-assignment loops, and search documents semantically.
