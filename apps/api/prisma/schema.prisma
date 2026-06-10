@@ -428,7 +428,3 @@ model Attachment {
   @@index([task_id])
 }
 
-model alembic_version {
-  version_num String @id @db.VarChar(32)
-}
-

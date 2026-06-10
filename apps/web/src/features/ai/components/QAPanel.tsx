@@ -21,7 +21,7 @@ interface QAPanelProps {
 export const QAPanel: React.FC<QAPanelProps> = ({ documentId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const { text, sources, isLoading, error, startStream, stopStream, resetStream } = useAIStream();
+  const { text, sources, isLoading, error, startStream, resetStream } = useAIStream();
   const threadEndRef = useRef<HTMLDivElement>(null);
   
   const activeStreamMessageRef = useRef<string | null>(null);
