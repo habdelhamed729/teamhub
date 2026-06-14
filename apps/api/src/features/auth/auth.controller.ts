@@ -3,10 +3,13 @@ import * as AuthService from './auth.service';
 import { sendSuccess, sendError } from '../../utils/response';
 import { signAccessToken } from '../../utils/jwt';
 
+const isProduction = process.env['NODE_ENV'] === 'production';
+
 const COOKIE_OPTS = {
   httpOnly: true,
-  secure: process.env['NODE_ENV'] === 'production',
-  sameSite: 'lax' as const,
+  secure: isProduction,
+  sameSite: isProduction ? 'none' as const : 'lax' as const,
+  ...(process.env['COOKIE_DOMAIN'] ? { domain: process.env['COOKIE_DOMAIN'] } : {}),
 };
 
 const ACCESS_COOKIE_OPTS = {
